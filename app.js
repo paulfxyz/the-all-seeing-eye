@@ -272,6 +272,112 @@ var activeFilter  = null;
 var _sslChecked   = {}; /* tracks which domains have had SSL fetched this session */
 var DOH           = 'https://cloudflare-dns.com/dns-query?name=';
 
+
+/* ────────────────────────────────────────────────────────────────
+   UPTIME PERSISTENCE
+   ─────────────────────────────────────────────────────────────
+   Uptime data persists across page loads via a cookie.
+   Each domain tracks: total checks, successful (UP) checks,
+   first-seen timestamp, and last-down timestamp.
+
+   Cookie: "ase_uptime" (JSON, max-age 1 year)
+   Format: { "domain.com": { checks:N, ups:N, firstSeen:ts, lastDown:ts } }
+
+   Why cookie vs localStorage:
+   - localStorage is blocked in sandboxed iframes
+   - Cookies work in all contexts including incognito*
+   - 4KB cookie limit is enough for ~50 domains
+   * Chrome incognito clears cookies on session end — acceptable tradeoff
+   ──────────────────────────────────────────────────────────────── */
+
+var _uptimeData = {}; /* loaded from cookie on init */
+
+/** Load uptime data from cookie */
+function uptimeLoad() {
+  try {
+    var match = document.cookie.match(/(?:^|; )ase_uptime=([^;]*)/);
+    if (match) {
+      _uptimeData = JSON.parse(decodeURIComponent(match[1])) || {};
+    }
+  } catch(e) { _uptimeData = {}; }
+}
+
+/** Save uptime data to cookie (1-year expiry) */
+function uptimeSave() {
+  try {
+    var value = encodeURIComponent(JSON.stringify(_uptimeData));
+    /* Trim to avoid exceeding 4KB — keep most-checked domains */
+    if (value.length > 3800) {
+      var sorted = Object.keys(_uptimeData)
+        .sort(function(a, b) { return (_uptimeData[b].checks||0) - (_uptimeData[a].checks||0); })
+        .slice(0, 40);
+      var trimmed = {};
+      sorted.forEach(function(k) { trimmed[k] = _uptimeData[k]; });
+      _uptimeData = trimmed;
+      value = encodeURIComponent(JSON.stringify(_uptimeData));
+    }
+    document.cookie = 'ase_uptime=' + value + '; max-age=31536000; path=/; SameSite=Lax';
+  } catch(e) {}
+}
+
+/** Record a check result for a domain */
+function uptimeRecord(domain, isUp) {
+  if (!_uptimeData[domain]) {
+    _uptimeData[domain] = { checks: 0, ups: 0, firstSeen: Date.now(), lastDown: null };
+  }
+  var rec = _uptimeData[domain];
+  rec.checks++;
+  if (isUp) {
+    rec.ups++;
+  } else {
+    rec.lastDown = Date.now();
+  }
+}
+
+/** Get uptime percentage string for a domain */
+function uptimePercent(domain) {
+  var rec = _uptimeData[domain];
+  if (!rec || rec.checks < 2) return null;
+  return Math.round((rec.ups / rec.checks) * 1000) / 10; /* 1 decimal */
+}
+
+/** Get number of days since first check */
+function uptimeDaysSince(domain) {
+  var rec = _uptimeData[domain];
+  if (!rec || !rec.firstSeen) return null;
+  return Math.max(1, Math.round((Date.now() - rec.firstSeen) / 86400000));
+}
+
+/** Build tooltip HTML for the status cell */
+function uptimeTooltipHTML(domain, currentState) {
+  var rec = _uptimeData[domain];
+  if (!rec || rec.checks < 2) {
+    return '<div class="tooltip-box"><div class="tt-title">Uptime</div>' +
+      '<div class="tt-row"><span class="tt-label">Status</span>' +
+      '<span class="tt-val">Monitoring started — check again soon</span></div></div>';
+  }
+  var pct       = uptimePercent(domain);
+  var days      = uptimeDaysSince(domain);
+  var lastDownStr = rec.lastDown
+    ? new Date(rec.lastDown).toLocaleDateString()
+    : 'Never recorded';
+  var color = pct >= 99 ? 'var(--green)' : pct >= 95 ? 'var(--yellow)' : 'var(--red)';
+  return (
+    '<div class="tooltip-box" style="min-width:200px">' +
+      '<div class="tt-title">Uptime (this device)</div>' +
+      '<div class="tt-row"><span class="tt-label">Uptime</span>' +
+        '<span class="tt-val" style="color:' + color + ';font-weight:700">' + pct + '%</span></div>' +
+      '<div class="tt-row"><span class="tt-label">Checks</span>' +
+        '<span class="tt-val">' + rec.checks + ' checks over ' + days + ' day' + (days===1?'':'s') + '</span></div>' +
+      '<div class="tt-row"><span class="tt-label">Last down</span>' +
+        '<span class="tt-val">' + lastDownStr + '</span></div>' +
+    '</div>'
+  );
+}
+
+/* Load uptime data immediately */
+uptimeLoad();
+
 /* Snapshot of the Refresh button's original HTML — captured at first use.
  * Used to restore the button after loading/countdown states. */
 var REFRESH_BTN_ORIGINAL = null;
@@ -441,9 +547,14 @@ function renderTable() {
       '</div></td>' +
 
       '<td><div class="status-cell">' +
-        '<span class="status-dot ' + dotCls + '"></span>' +
-        '<span class="status-label ' + statusCls + '">' + statusLabel + '</span>' +
-        '<div class="sparkline">' + sparklineHTML(st.history) + '</div>' +
+        '<div class="tooltip-host">' +
+          '<div style="display:flex;align-items:center;gap:var(--space-2)">' +
+            '<span class="status-dot ' + dotCls + '"></span>' +
+            '<span class="status-label ' + statusCls + '">' + statusLabel + '</span>' +
+            '<div class="sparkline">' + sparklineHTML(st.history) + '</div>' +
+          '</div>' +
+          uptimeTooltipHTML(d.domain, st.up) +
+        '</div>' +
       '</div></td>' +
       '<td class="latency ' + latClass(st.latency) + '">' + latStr + '</td>' +
       '<td><div class="ssl-cell"><span class="ssl-days ' + sslClass(days) + '">' + sslStr + '</span>' + leBadge + '</div></td>' +
@@ -785,61 +896,129 @@ function setRowLoading(domain, loading) {
  */
 
 /**
- * Fetch SSL certificate expiry for a domain.
+ * Fetch SSL expiry for a SINGLE domain.
+ * Tries ssl-check.php first (fast, server-side TLS).
+ * Falls back to crt.sh if PHP endpoint not available.
  *
- * Priority order:
- *  1. ssl-check.php  — same-origin PHP endpoint, real TLS handshake.
- *                      Fastest and most reliable. Works for any domain.
- *                      Available on PHP hosts (SiteGround etc.).
- *  2. crt.sh API     — certificate transparency logs, public API.
- *                      Fallback when ssl-check.php is not present.
- *                      Can time out on obscure/private domains.
- *  3. null           — SSL column shows "—". Run update-stats.php to
- *                      generate domains.json which seeds SSL on load.
+ * NOTE: For bulk checks, use fetchAllSSLExpiry() instead —
+ * it batches all domains into one HTTP request.
  *
  * @param  {string} domain
  * @returns {Promise<{expiry:string, issuer:string}|null>}
  */
 async function fetchSSLExpiry(domain) {
-
   /* Strategy 1: ssl-check.php on same server */
   try {
     var phpRes = await fetch('./ssl-check.php?domain=' + encodeURIComponent(domain), {
-      signal: AbortSignal.timeout(6000)
+      signal: AbortSignal.timeout(8000)
     });
-    /* 404 = file not uploaded; fall through to crt.sh */
     if (phpRes.ok) {
-      var phpData = await phpRes.json();
-      if (phpData && phpData.expiry && !phpData.error) {
-        return { expiry: phpData.expiry, issuer: phpData.issuer || '' };
+      var d = await phpRes.json();
+      if (d && d.expiry && !d.error && d.error !== 'rate_limited') {
+        return { expiry: d.expiry, issuer: d.issuer || '' };
       }
     }
-    if (phpRes.status !== 404) throw new Error('php-error');
-  } catch(phpErr) {
-    /* PHP not available or network error — try crt.sh */
-  }
+    if (phpRes.status !== 404) throw new Error('php-err');
+  } catch(e) { /* fall through */ }
 
   /* Strategy 2: crt.sh certificate transparency */
   try {
-    var url = 'https://crt.sh/?q=' + encodeURIComponent(domain) + '&output=json&exclude=expired';
-    var res  = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    var res = await fetch(
+      'https://crt.sh/?q=' + encodeURIComponent(domain) + '&output=json&exclude=expired',
+      { signal: AbortSignal.timeout(5000) }
+    );
     if (!res.ok) return null;
     var certs = await res.json();
-    if (!Array.isArray(certs) || certs.length === 0) return null;
+    if (!Array.isArray(certs) || !certs.length) return null;
     var now   = new Date();
     var valid = certs
       .filter(function(c) { return c.not_after && new Date(c.not_after) > now; })
       .sort(function(a, b) { return new Date(b.not_after) - new Date(a.not_after); });
-    if (valid.length === 0) return null;
+    if (!valid.length) return null;
     var best  = valid[0];
     var expiry = (best.not_after || '').split('T')[0];
     var cn    = (best.issuer_name || '').replace(/.*CN=/, '').replace(/,.*/, '').trim();
-    var isLE  = /^(R\d+|E\d+)/i.test(cn) || cn.toLowerCase().indexOf("let") >= 0;
+    var isLE  = /^[RE]\d+$/i.test(cn) || cn.toLowerCase().indexOf("let") >= 0;
     return { expiry: expiry, issuer: isLE ? 'LE' : cn.slice(0, 20) };
-  } catch(e) {
-    return null;
-  }
+  } catch(e) { return null; }
 }
+
+/**
+ * BATCH SSL fetch — checks multiple domains in ONE php request.
+ *
+ * This is the primary SSL check path. Instead of 34 separate HTTP
+ * requests (one per domain), we send a single request:
+ *   GET /ssl-check.php?domains=dom1,dom2,dom3,...
+ * and get back an array of results.
+ *
+ * Benefits:
+ *  - Dramatically fewer HTTP round-trips (1 vs N)
+ *  - No browser parallelism limit issues
+ *  - Server processes sequentially but returns all results at once
+ *
+ * Falls back to individual crt.sh calls for domains that error
+ * in the batch response.
+ *
+ * @param {string[]} domains - list of bare domain names
+ * @returns {Promise<Object>} map of domain → {expiry, issuer}
+ */
+async function fetchAllSSLExpiry(domains) {
+  var sslMap = {};
+  if (!domains || !domains.length) return sslMap;
+
+  /* Filter to only domains that need checking */
+  var needed = domains.filter(function(d) {
+    return !_sslChecked[d] && !DOMAINS.find(function(x){ return x.domain===d && x.sslExpiry; });
+  });
+  if (!needed.length) return sslMap;
+
+  /* Mark all as checked upfront to prevent re-querying on parallel calls */
+  needed.forEach(function(d) { _sslChecked[d] = true; });
+
+  /* Strategy 1: batch php call */
+  try {
+    /* Split into chunks of 20 to stay well within URL length limits */
+    var CHUNK = 20;
+    for (var i = 0; i < needed.length; i += CHUNK) {
+      var chunk  = needed.slice(i, i + CHUNK);
+      var params = chunk.map(encodeURIComponent).join(',');
+      var phpRes = await fetch('./ssl-check.php?domains=' + params, {
+        signal: AbortSignal.timeout(30000) /* generous: PHP processes sequentially */
+      });
+
+      if (phpRes.status === 404) {
+        /* ssl-check.php not uploaded — fall through to crt.sh */
+        throw new Error('no-php');
+      }
+      if (!phpRes.ok) continue;
+
+      var results = await phpRes.json();
+      if (!Array.isArray(results)) continue;
+
+      results.forEach(function(r) {
+        if (r && r.domain && r.expiry && !r.error) {
+          sslMap[r.domain] = { expiry: r.expiry, issuer: r.issuer || '' };
+        }
+      });
+    }
+    return sslMap;
+  } catch(phpErr) {
+    /* PHP not available — fall through to per-domain crt.sh */
+  }
+
+  /* Strategy 2: parallel crt.sh calls (one per domain) */
+  var crtResults = await Promise.all(needed.map(function(domain) {
+    return fetchSSLExpiry(domain).then(function(r) {
+      return { domain: domain, result: r };
+    });
+  }));
+  crtResults.forEach(function(item) {
+    if (item.result) sslMap[item.domain] = item.result;
+  });
+
+  return sslMap;
+}
+
 
 async function checkDomain(domain, fullScan) {
   /* Ensure state entry exists */
@@ -863,6 +1042,7 @@ async function checkDomain(domain, fullScan) {
     st.latency = ms;
     st.history.push({ up: up, latency: ms });
     if (st.history.length > 20) st.history.shift();
+    uptimeRecord(domain, up);
   } catch(e) {
     st.up      = false;
     st.latency = null;
@@ -887,26 +1067,8 @@ async function checkDomain(domain, fullScan) {
    * The built-in top-30 list has accurate seeded expiry dates from a
    * real scan — we only enrich custom domains (sslExpiry === null).
    * ──────────────────────────────────────────────────────────────── */
-  /* ── SSL expiry check ────────────────────────────────────────────────
-   * Fires for any domain without a seeded expiry date (i.e. all domains
-   * loaded from domains.list that aren't in the built-in top-30).
-   * Uses _sslChecked set to avoid re-querying on every refresh cycle.
-   * crt.sh is CORS-enabled; 5s timeout; result updates row when ready.
-   * ──────────────────────────────────────────────────────────────── */
-  if (entry && !entry.sslExpiry && !_sslChecked[domain]) {
-    _sslChecked[domain] = true; /* mark so we don't re-fetch on next refresh */
-    fetchSSLExpiry(domain).then(function(result) {
-      if (result && entry) {
-        entry.sslExpiry = result.expiry;
-        entry.sslIssuer = result.issuer;
-        renderTable();
-        updateStats();
-      } else {
-        /* crt.sh failed — allow retry on next page load but not this session */
-        /* _sslChecked[domain] stays true to avoid hammering crt.sh */
-      }
-    });
-  }
+  /* SSL expiry is now checked in bulk via checkAll() → fetchAllSSLExpiry()
+   * after all DNS checks complete. Nothing to do here per-domain. */
 
   /* ── Full DNS scan: NS, MX, TXT, DMARC (for custom or placeholder entries) ── */
   if (needFullScan && entry) {
@@ -1005,9 +1167,32 @@ async function checkAll() {
   if (el) el.textContent = 'Last checked: ' + new Date().toLocaleTimeString();
   updateStats();
   renderTable();
-  saveDomainsStats();
 
-  /* Hide the animated scan progress bar */
+  /* Batch SSL — fetch expiry for all domains still showing "—".
+   * One PHP request covers all missing domains.
+   * Runs after DNS checks so latency/uptime appears first. */
+  var needSSL = DOMAINS
+    .filter(function(d) { return !d.sslExpiry && !_sslChecked[d.domain]; })
+    .map(function(d) { return d.domain; });
+  if (needSSL.length > 0) {
+    fetchAllSSLExpiry(needSSL).then(function(sslMap) {
+      var updated = false;
+      Object.keys(sslMap).forEach(function(domain) {
+        var entry = DOMAINS.find(function(d) { return d.domain === domain; });
+        if (entry && sslMap[domain]) {
+          entry.sslExpiry = sslMap[domain].expiry;
+          entry.sslIssuer = sslMap[domain].issuer;
+          updated = true;
+        }
+      });
+      if (updated) { renderTable(); updateStats(); }
+    });
+  }
+
+  saveDomainsStats();
+  uptimeSave(); /* persist uptime data to cookie */
+
+  /* Hide the scan progress bar */
   var spw = document.getElementById('scan-progress-wrap');
   if (spw) spw.classList.add('hidden');
 
@@ -1249,8 +1434,7 @@ function openAddModal() {
   if (tags) tags.innerHTML = '';
   var inp = document.getElementById('add-input');
   if (inp) inp.value = '';
-  var cat = document.getElementById('add-cat');
-  if (cat) cat.value = 'custom';
+  /* cat selector removed in v2.0.0 */
   var overlay = document.getElementById('add-overlay');
   if (overlay) overlay.classList.add('open');
   setTimeout(function(){ var i=document.getElementById('add-input'); if(i) i.focus(); }, 80);
@@ -1281,8 +1465,7 @@ function queueDomain() {
   if (DOMAINS.some(function(d){ return d.domain===domain; })) { inp.value=''; return; }
   if (pendingQueue.some(function(x){ return x.domain===domain; })) { inp.value=''; return; }
 
-  var cat = (document.getElementById('add-cat')||{}).value || 'custom';
-  pendingQueue.push({ domain: domain, cat: cat });
+  pendingQueue.push({ domain: domain, cat: 'custom' });
   inp.value = '';
 
   /* Show a tag chip */
@@ -1310,7 +1493,7 @@ function confirmAddDomains() {
   if (inp) {
     var domain = parseDomain(inp.value);
     if (domain && domain.indexOf('.')>=0 && !DOMAINS.some(function(d){return d.domain===domain;})) {
-      pendingQueue.push({ domain: domain, cat: (document.getElementById('add-cat')||{}).value||'custom' });
+      pendingQueue.push({ domain: domain, cat: 'custom' });
     }
   }
   if (pendingQueue.length === 0) { closeAddModal(); return; }
@@ -1822,6 +2005,40 @@ document.addEventListener('keydown', function(e) {
    2. Render table immediately (shows domains before checks run)
    3. Run live DNS checks in background
    ──────────────────────────────────────────────────────────────── */
+
+function toggleHeaderMenu(e) {
+  e.stopPropagation();
+  var menu      = document.getElementById('header-dropdown-menu');
+  var backdrop  = document.getElementById('header-dropdown-backdrop');
+  var toggle    = e.currentTarget;
+  var isOpen    = menu.classList.contains('open');
+  if (isOpen) {
+    closeHeaderMenu();
+  } else {
+    menu.classList.add('open');
+    if (backdrop) backdrop.classList.add('open');
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function closeHeaderMenu() {
+  var menu      = document.getElementById('header-dropdown-menu');
+  var backdrop  = document.getElementById('header-dropdown-backdrop');
+  var toggle    = document.querySelector('.header-dropdown-toggle');
+  if (menu)     menu.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+  if (toggle)   toggle.setAttribute('aria-expanded', 'false');
+}
+
+/* Backdrop div — added to body at init to catch outside clicks */
+(function() {
+  var bd = document.createElement('div');
+  bd.id = 'header-dropdown-backdrop';
+  bd.className = 'header-dropdown-backdrop';
+  bd.addEventListener('click', closeHeaderMenu);
+  document.body.appendChild(bd);
+})();
+
 async function initDashboard() {
   await loadDomainList();
   renderTable();

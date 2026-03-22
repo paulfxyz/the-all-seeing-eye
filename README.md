@@ -6,7 +6,7 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-1.3.0-brightgreen?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.0.0-brightgreen?style=for-the-badge)
 ![Self-hosted](https://img.shields.io/badge/self--hosted-no_server_needed-blue?style=for-the-badge)
 
 **Open-source uptime, DNS, SSL and latency monitor. One HTML file. Zero dependencies.**
@@ -201,6 +201,13 @@ On startup, the app tries `fetch('./domains.list')`. If the file exists and is n
 ## 📝 Changelog
 
 > Full changelog: **[CHANGELOG.md](./CHANGELOG.md)**
+
+### 🔖 v2.0.0 — 2026-03-22
+- 🚀 **feat:** Batch SSL — single `ssl-check.php?domains=...` request covers all domains (no more per-domain races)
+- 📊 **feat:** Uptime persistence via cookie — hover STATUS to see uptime %, total checks, days monitored, last-down date
+- 🎛 **feat:** Header dropdown — secondary actions (GitHub, CSV, Webhook, PIN, Help) in "More ⋮" menu; primary stays clean
+- 🗑️ **fix:** Category dropdown removed from Add Domain modal
+- 🎨 **fix:** Theme toggle height aligned with buttons; version badge corrected to 2.0.0
 
 ### 🔖 v1.9.0 — 2026-03-22
 - 🐛 **fix:** Refresh button no longer stuck on "1s…" — `REFRESH_BTN_ORIGINAL` snapshot guarantees correct restoration after countdown

@@ -1,148 +1,142 @@
 <?php
 /**
  * ╔══════════════════════════════════════════════════════════════╗
- * ║  THE ALL SEEING EYE — ssl-check.php                          ║
+ * ║  THE ALL SEEING EYE — ssl-check.php  v2.0.0                  ║
  * ║                                                              ║
- * ║  PURPOSE                                                     ║
- * ║  ────────────────────────────────────────────────────────    ║
- * ║  A tiny PHP endpoint that the browser calls to get the real  ║
- * ║  SSL certificate expiry date for any domain.                 ║
+ * ║  Server-side SSL certificate expiry checker.                 ║
+ * ║  Called by the browser dashboard instead of crt.sh because: ║
+ * ║   - PHP can open real TLS connections (browser cannot)       ║
+ * ║   - No CORS issues (same-origin request)                     ║
+ * ║   - Works for any domain, including small/private ones       ║
+ * ║   - crt.sh has CT log gaps and frequent timeouts             ║
  * ║                                                              ║
- * ║  Why this exists:                                            ║
- * ║  The browser cannot do raw TLS connections (no socket API).  ║
- * ║  External certificate APIs (crt.sh, ssl-checker.io) either  ║
- * ║  have CORS issues or timeout on small/private domains.       ║
- * ║  This PHP script runs on your server — same origin, no CORS  ║
- * ║  — and uses PHP's built-in stream_socket_client() to open a  ║
- * ║  real TLS connection to port 443 and read the peer cert.     ║
+ * ║  BATCH MODE (v2.0.0)                                         ║
+ * ║  Supports checking multiple domains in a single HTTP request ║
+ * ║  to avoid 34 separate browser→PHP calls.                     ║
  * ║                                                              ║
- * ║  USAGE                                                       ║
- * ║  ────────────────────────────────────────────────────────    ║
- * ║  GET /ssl-check.php?domain=paulfleury.com                    ║
+ * ║  Single:  GET /ssl-check.php?domain=example.com              ║
+ * ║  Batch:   GET /ssl-check.php?domains=a.com,b.com,c.com       ║
  * ║                                                              ║
- * ║  Response (JSON):                                            ║
- * ║  { "domain": "paulfleury.com",                               ║
- * ║    "expiry": "2026-06-06",                                    ║
- * ║    "issuer": "LE",                                           ║
- * ║    "days_remaining": 76 }                                    ║
- * ║                                                              ║
- * ║  On error:                                                   ║
- * ║  { "domain": "...", "error": "Could not connect" }           ║
- * ║                                                              ║
- * ║  SECURITY                                                    ║
- * ║  ────────────────────────────────────────────────────────    ║
- * ║  • Input is strictly validated (hostname characters only)    ║
- * ║  • Only port 443 is contacted                                ║
- * ║  • TLS verification is disabled for the handshake (we want   ║
- * ║    the cert data even if the cert is invalid/expired)        ║
- * ║  • Rate limiting: 1 request per domain per second            ║
- * ║    (enforced via a file-based token bucket in /tmp)          ║
- * ║  • CORS header allows same-origin browser requests           ║
+ * ║  Response:                                                   ║
+ * ║  Single: {"domain":"…","expiry":"2026-06-06","issuer":"LE",  ║
+ * ║           "days_remaining":76}                               ║
+ * ║  Batch:  [{"domain":"…","expiry":"…"},{"domain":"…",...}]    ║
  * ╚══════════════════════════════════════════════════════════════╝
  */
 
 /* ── Output headers ─────────────────────────────────────────── */
 header('Content-Type: application/json');
-header('Cache-Control: public, max-age=3600');  /* cache 1 hour — cert rarely changes */
-header('Access-Control-Allow-Origin: *');        /* same-origin plus local dev */
+header('Cache-Control: public, max-age=3600'); /* cert rarely changes within an hour */
+header('Access-Control-Allow-Origin: *');
 
-/* ── Input validation ───────────────────────────────────────── */
-$domain = trim($_GET['domain'] ?? '');
+/* ── Helper: validate a hostname ────────────────────────────── */
+function is_valid_hostname(string $h): bool {
+    return (bool) preg_match('/^[a-zA-Z0-9\.\-]{1,253}$/', $h)
+        && str_contains($h, '.');
+}
 
-/* Allow only valid hostname characters (letters, digits, dots, hyphens) */
-if (!$domain || !preg_match('/^[a-zA-Z0-9\.\-]{1,253}$/', $domain) || !str_contains($domain, '.')) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid domain parameter']);
+/**
+ * Connect to port 443 and return cert metadata, or an error string.
+ *
+ * @param  string $domain
+ * @param  int    $timeout  seconds
+ * @return array  keys: domain, expiry, issuer, days_remaining, valid | error
+ */
+function check_ssl(string $domain, int $timeout = 8): array {
+    $domain = strtolower(trim($domain));
+
+    $context = stream_context_create([
+        'ssl' => [
+            'capture_peer_cert' => true,
+            'verify_peer'       => false, /* want data even for expired/misconfigured certs */
+            'verify_peer_name'  => false,
+            'SNI_enabled'       => true,
+            'peer_name'         => $domain,
+        ]
+    ]);
+
+    $stream = @stream_socket_client(
+        'ssl://' . $domain . ':443',
+        $errno, $errstr,
+        $timeout,
+        STREAM_CLIENT_CONNECT,
+        $context
+    );
+
+    if (!$stream) {
+        return ['domain' => $domain, 'error' => $errstr ?: 'Connection failed (errno '.$errno.')'];
+    }
+
+    $params = stream_context_get_params($stream);
+    fclose($stream);
+
+    $cert = $params['options']['ssl']['peer_certificate'] ?? null;
+    if (!$cert) {
+        return ['domain' => $domain, 'error' => 'No certificate in handshake'];
+    }
+
+    $info = openssl_x509_parse($cert);
+    if (!$info) {
+        return ['domain' => $domain, 'error' => 'Certificate parse failed'];
+    }
+
+    $validTo = $info['validTo_time_t'] ?? null;
+    if (!$validTo) {
+        return ['domain' => $domain, 'error' => 'No expiry date in certificate'];
+    }
+
+    /* Detect issuer — Let's Encrypt uses CN patterns R3, R10, R11, E5, E6, E7… */
+    $cn    = $info['issuer']['CN'] ?? $info['issuer']['O'] ?? 'Unknown';
+    $isLE  = stripos($cn, "let's encrypt") !== false
+          || preg_match('/^[RE]\d+$/', $cn);
+    $issuer = $isLE ? 'LE' : (strlen($cn) > 25 ? substr($cn, 0, 25) : $cn);
+
+    $days = (int) round(($validTo - time()) / 86400);
+
+    return [
+        'domain'         => $domain,
+        'expiry'         => date('Y-m-d', $validTo),
+        'issuer'         => $issuer,
+        'days_remaining' => $days,
+        'valid'          => $days > 0,
+    ];
+}
+
+/* ── Route: batch (preferred) ───────────────────────────────── */
+if (!empty($_GET['domains'])) {
+    $raw     = $_GET['domains'];
+    $parts   = array_slice(explode(',', $raw), 0, 50); /* cap at 50 domains per request */
+    $results = [];
+
+    foreach ($parts as $raw_domain) {
+        $domain = strtolower(trim($raw_domain));
+        if (!is_valid_hostname($domain)) {
+            $results[] = ['domain' => $domain, 'error' => 'Invalid hostname'];
+            continue;
+        }
+        $results[] = check_ssl($domain);
+    }
+
+    echo json_encode($results);
     exit;
 }
 
-$domain = strtolower($domain);
+/* ── Route: single domain ───────────────────────────────────── */
+$domain = strtolower(trim($_GET['domain'] ?? ''));
 
-/* ── Simple file-based rate limiting ───────────────────────────
- * Prevents abuse: one check per domain per second.
- * Uses a temp file per domain; if the file is newer than 1s, reject.
- */
+if (!$domain || !is_valid_hostname($domain)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Missing or invalid domain parameter']);
+    exit;
+}
+
+/* Simple per-domain rate limit: max 1 check/domain/2s */
 $rateFile = sys_get_temp_dir() . '/ase_ssl_' . md5($domain) . '.rate';
-if (file_exists($rateFile) && (time() - filemtime($rateFile)) < 1) {
-    http_response_code(429);
-    echo json_encode(['error' => 'Rate limited — try again in 1s', 'domain' => $domain]);
+if (file_exists($rateFile) && (time() - filemtime($rateFile)) < 2) {
+    /* Return cached error rather than 429 — browser won't retry */
+    echo json_encode(['domain' => $domain, 'error' => 'rate_limited']);
     exit;
 }
 @touch($rateFile);
 
-/* ── TLS connection ─────────────────────────────────────────── */
-/**
- * Connect to port 443, capture the peer certificate, parse it.
- *
- * We set verify_peer=false because:
- *  a) We want the expiry date even for expired/misconfigured certs
- *  b) We're not validating trust — just reading metadata
- *  c) It speeds up the handshake (no CA chain lookup)
- */
-$context = stream_context_create([
-    'ssl' => [
-        'capture_peer_cert' => true,
-        'verify_peer'       => false,
-        'verify_peer_name'  => false,
-        'SNI_enabled'       => true,
-        'peer_name'         => $domain,
-    ]
-]);
-
-$timeout = 5; /* seconds */
-$stream  = @stream_socket_client(
-    'ssl://' . $domain . ':443',
-    $errno, $errstr,
-    $timeout,
-    STREAM_CLIENT_CONNECT,
-    $context
-);
-
-if (!$stream) {
-    echo json_encode([
-        'domain' => $domain,
-        'error'  => $errstr ?: 'Could not connect (errno ' . $errno . ')',
-    ]);
-    exit;
-}
-
-/* ── Extract and parse the certificate ─────────────────────── */
-$params = stream_context_get_params($stream);
-fclose($stream);
-
-$cert = $params['options']['ssl']['peer_certificate'] ?? null;
-if (!$cert) {
-    echo json_encode(['domain' => $domain, 'error' => 'No certificate returned']);
-    exit;
-}
-
-$info = openssl_x509_parse($cert);
-if (!$info) {
-    echo json_encode(['domain' => $domain, 'error' => 'Could not parse certificate']);
-    exit;
-}
-
-/* ── Build response ─────────────────────────────────────────── */
-$validTo = $info['validTo_time_t'] ?? null;
-if (!$validTo) {
-    echo json_encode(['domain' => $domain, 'error' => 'Certificate has no expiry date']);
-    exit;
-}
-
-$expiryDate    = date('Y-m-d', $validTo);
-$daysRemaining = (int) round(($validTo - time()) / 86400);
-
-/* Detect issuer — extract CN from issuer DN */
-$issuerCN = $info['issuer']['CN'] ?? $info['issuer']['O'] ?? '?';
-/* Let's Encrypt CAs: R3, R10, R11, E5, E6, E7, etc. */
-$isLE   = stripos($issuerCN, "let's encrypt") !== false
-       || preg_match('/^[RE]\d+$/', $issuerCN);
-$issuer = $isLE ? 'LE' : (strlen($issuerCN) > 30 ? substr($issuerCN, 0, 30) : $issuerCN);
-
-echo json_encode([
-    'domain'         => $domain,
-    'expiry'         => $expiryDate,
-    'issuer'         => $issuer,
-    'days_remaining' => $daysRemaining,
-    'valid'          => $daysRemaining > 0,
-]);
+echo json_encode(check_ssl($domain));

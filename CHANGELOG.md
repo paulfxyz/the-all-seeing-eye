@@ -10,6 +10,66 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## 🔖 [2.0.0] — 2026-03-22
+
+### 🚀 Major Release — Batch SSL · Uptime Persistence · New Header
+
+---
+
+#### Batch SSL Check (ssl-check.php v2.0.0)
+
+- **Root cause of SSL "—" for most domains:** The previous approach fired one `ssl-check.php` request per domain as a non-blocking Promise inside `checkDomain()`. With 34 domains this meant 34 sequential HTTP requests triggered in parallel — some resolved before others, causing a race where later domains' SSL results would call `renderTable()` but `_sslChecked` had already been set, silently dropping results.
+- **The fix:** `fetchAllSSLExpiry(domains[])` — a single batch HTTP request that sends all domains at once: `GET /ssl-check.php?domains=dom1,dom2,...`. PHP processes them sequentially (fast: ~50ms/domain) and returns a JSON array. Called once at the end of `checkAll()` after DNS checks.
+- **ssl-check.php v2.0.0:** now accepts `?domains=` parameter (comma-separated, max 50 per request, chunked in JS). Rate limiting kept per-domain for single requests. Batch requests are unthrottled (trusted server-side flow).
+- **Fallback:** If `ssl-check.php` returns 404 (static host), falls back to per-domain `crt.sh` calls in parallel.
+
+#### Uptime Persistence (Cookie-Based)
+
+- **The problem:** Uptime sparklines reset on every page reload (history was in-memory only).
+- **The fix:** `_uptimeData` persists via a cookie (`ase_uptime`, 1-year expiry, JSON-encoded). On each `checkDomain()` result, `uptimeRecord(domain, isUp)` is called to increment checks/ups counters and record last-down timestamp.
+- **Hover tooltip on STATUS column:** Shows uptime percentage (1 decimal), total check count, days monitored, and last-down date.
+- **Cookie management:** Auto-trims to 40 most-checked domains if the cookie approaches 4KB.
+- Why cookie vs localStorage: localStorage is blocked in sandboxed iframes; cookies work in all contexts.
+
+#### Header Dropdown Menu
+
+- Secondary actions (GitHub, Export CSV, Webhook, Change PIN, Help) moved into a "More ⋮" dropdown.
+- Primary actions (Add Domain, Refresh) remain always visible.
+- Theme toggle remains inline.
+- Dropdown closes on outside click via a transparent backdrop div.
+- Mobile-friendly: single row of 3 elements (Add Domain | Refresh | More ⋮ | 🌙).
+
+#### Other UI Fixes
+
+- **Add Domain modal:** Category dropdown removed — all domains added as generic entries.
+- **Theme toggle height:** `height: 32px` + `!important` on track to match `.btn` height exactly.
+- **Version badge:** README badge updated from 1.3.0 → 2.0.0.
+
+### ✨ Added
+
+- **`fetchAllSSLExpiry(domains[])`** — batch SSL fetch function
+- **`_uptimeData` dict** — in-memory uptime records, persisted to cookie
+- **`uptimeLoad()`** — reads uptime cookie on page load
+- **`uptimeSave()`** — writes uptime cookie after each `checkAll()`
+- **`uptimeRecord(domain, isUp)`** — called on every `checkDomain()` result
+- **`uptimePercent(domain)`** — returns uptime % with 1 decimal
+- **`uptimeDaysSince(domain)`** — returns days since first check
+- **`uptimeTooltipHTML(domain)`** — builds hover tooltip for STATUS cell
+- **`toggleHeaderMenu()` / `closeHeaderMenu()`** — dropdown open/close
+- **CSS:** `.header-dropdown`, `.header-dropdown-menu`, `.dropdown-item`
+
+### 🔄 Changed
+
+- `checkAll()` — calls `fetchAllSSLExpiry()` after DNS batch, not per-domain
+- `checkDomain()` — SSL enrichment block removed; calls `uptimeRecord()` instead
+- `ssl-check.php` — batch mode via `?domains=` parameter
+- HTML header — rebuilt with dropdown; 2 primary + 1 dropdown + toggle
+- Add Domain modal — category `<select>` removed
+- `queueDomain()` / `confirmAddDomains()` / `openAddModal()` — no cat references
+- README version badge: `1.3.0` → `2.0.0`
+
+---
+
 ## 🔖 [1.9.0] — 2026-03-22
 
 ### 🎨 Header Consistency + Refresh Button Fix

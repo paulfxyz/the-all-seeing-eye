@@ -1092,6 +1092,12 @@
       cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
+      /* Match .btn height so it aligns perfectly in the header */
+      height: 32px;
+    }
+
+    .theme-track {
+      height: 28px !important; /* force consistent height */
     }
     .theme-switch input[type="checkbox"] { display: none; }
 
@@ -1242,3 +1248,61 @@
       border-radius: 1px;
     }
 
+
+    /* ── Header Dropdown Menu ── */
+    .header-dropdown {
+      position: relative;
+    }
+
+    .header-dropdown-toggle {
+      gap: var(--space-1);
+    }
+
+    .header-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 180px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      overflow: hidden;
+      animation: card-in 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .header-dropdown-menu.open {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      width: 100%;
+      padding: var(--space-3) var(--space-4);
+      font-family: var(--font-display);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--border-soft);
+      cursor: pointer;
+      text-align: left;
+      text-decoration: none;
+      transition: background var(--ease), color var(--ease);
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item:hover { background: var(--surface-2); color: var(--text); }
+
+    /* Close dropdown when clicking outside */
+    .header-dropdown-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+    }
+    .header-dropdown-backdrop.open { display: block; }
