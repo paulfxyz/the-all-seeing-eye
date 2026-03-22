@@ -10,6 +10,66 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## 🔖 [1.3.0] — 2026-03-22
+
+### 📦 Modular Architecture + Loading Animation + .htaccess Guide
+
+---
+
+#### Modular Architecture — index.html split into three files
+
+- **The problem:** `index.html` had grown to 130KB+ with 1,161 lines of CSS and 1,434 lines of JavaScript all inline. Difficult to read, maintain, or version-diff. Browsers also can't independently cache inline assets.
+- **The fix:** CSS and JS extracted into dedicated modules:
+  - `app.css` — all styles (41KB, 1,170 lines)
+  - `app.js` — all JavaScript (73KB, 1,440 lines)
+  - `index.html` — clean HTML shell only (29KB, ~530 lines)
+- `index.html` links the modules via `<link rel="stylesheet" href="app.css">` and `<script src="app.js"></script>`.
+- Browsers now cache `app.css` and `app.js` independently — subsequent page loads only re-fetch `index.html` if the CSS/JS haven't changed.
+- **index.html reduced by 77.8%** — from 130KB to 29KB.
+
+#### Row Loading Animation — 500ms minimum
+
+- **The problem:** DNS queries for fast-resolving domains (< 100ms) caused rows to flash so briefly the user couldn't tell a scan was happening. The progressive scan effect was invisible.
+- **The fix:** `setRowLoading()` now enforces a **500ms minimum dim duration**:
+  - On `setRowLoading(domain, true)`: row gets class `is-checking` (opacity 0.32) and start timestamp is recorded in `_rowLoadingStart[domain]`.
+  - On `setRowLoading(domain, false)`: elapsed time is calculated. If less than `MIN_ROW_LOADING_MS` (500ms), the un-dim is deferred by the remainder via `setTimeout`.
+  - On un-dim: `is-checking` swaps to `is-checking-done`, which triggers a slow 600ms CSS fade-in so each row "lights up" satisfyingly as it completes.
+- **Scan progress bar:** A horizontal animated sweep bar appears below the status bar during any full `checkAll()` run and hides with a fade on completion.
+- **Per-row ↺ button** now uses a CSS class (`is-spinning`) for the rotation animation instead of inline `style.animation`, making it easier to override via CSS.
+
+#### .htaccess Documentation (INSTALL.md Option B)
+
+- **The problem:** Option B (cron-job.org) requires an `.htaccess` rewrite rule for `webhook.do` to be accessible. This was not documented — users setting up cron-job.org would see 404 errors without knowing why.
+- **The fix:** A new `⚠️ Required: .htaccess rule for webhook.do` section added at the top of Option B, before the cron-job.org setup steps. Explains:
+  - Why the rule is mandatory (server needs to map `.do` to the HTML file)
+  - The exact `RewriteRule` for Apache/SiteGround
+  - Step-by-step instructions for adding it in SiteGround File Manager
+  - A troubleshooting table mapping HTTP status codes (200/404/403/500) to causes
+- Option B now also includes instructions to **test the webhook URL manually** in a browser before setting up the cron job.
+
+### ✨ Added
+
+- **`app.css`** — extracted CSS module (41KB)
+- **`app.js`** — extracted JS module (73KB)
+- **`MIN_ROW_LOADING_MS = 500`** constant — minimum row dim duration
+- **`_rowLoadingStart` dict** — tracks start timestamps per domain for minimum enforcement
+- **`is-checking` CSS class** — applies `opacity: 0.32` with 150ms transition in
+- **`is-checking-done` CSS class** — applies 600ms opacity fade to 1 on un-dim
+- **`scan-progress-wrap` / `scan-progress-bar`** — animated sweep bar shown during `checkAll()`
+- **`@keyframes scan-sweep`** — horizontal sweep animation for the progress bar
+- **`is-spinning` CSS class** — spin animation for per-row ↺ button
+- **INSTALL.md Option B** — `⚠️ Required: .htaccess rule` section with SiteGround instructions
+
+### 🔄 Changed
+
+- `index.html` — inline `<style>` and `<script>` replaced with `<link>` and `<script src>`
+- `setRowLoading(domain, loading)` — complete rewrite with 500ms minimum and CSS class approach
+- `refreshRow()` — uses `classList.add/remove('is-spinning')` instead of `style.animation`
+- `checkAll()` — shows/hides `scan-progress-wrap` at start/end of scan
+- INSTALL.md Option B — mandatory `.htaccess` step now appears before cron-job.org setup
+
+---
+
 ## 🔖 [1.2.0] — 2026-03-22
 
 ### 🔐 Live SSL Expiry + NS Accuracy + DNS Parsing Fixes
