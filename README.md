@@ -202,6 +202,11 @@ On startup, the app tries `fetch('./domains.list')`. If the file exists and is n
 
 > Full changelog: **[CHANGELOG.md](./CHANGELOG.md)**
 
+### 🔖 v1.9.0 — 2026-03-22
+- 🐛 **fix:** Refresh button no longer stuck on "1s…" — `REFRESH_BTN_ORIGINAL` snapshot guarantees correct restoration after countdown
+- 🎨 **fix:** Header button consistency — cog shows "PIN", ? shows "Help", both with SVG icons matching other buttons
+- 🎨 **fix:** Theme toggle border-radius aligned with button style
+
 ### 🔖 v1.8.0 — 2026-03-22
 - 🔐 **feat:** `ssl-check.php` — same-origin PHP endpoint for fast, reliable SSL cert checks (replaces crt.sh as primary source)
 - ⚙️ **feat:** PIN change modal — cog icon in header: enter current PIN → new PIN → confirm

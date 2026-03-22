@@ -272,6 +272,15 @@ var activeFilter  = null;
 var _sslChecked   = {}; /* tracks which domains have had SSL fetched this session */
 var DOH           = 'https://cloudflare-dns.com/dns-query?name=';
 
+/* Snapshot of the Refresh button's original HTML — captured at first use.
+ * Used to restore the button after loading/countdown states. */
+var REFRESH_BTN_ORIGINAL = null;
+(function() {
+  /* Run after DOM is ready (script is at end of body) */
+  var btn = document.getElementById('btn-refresh');
+  if (btn) REFRESH_BTN_ORIGINAL = btn.innerHTML;
+})();
+
 
 /* ────────────────────────────────────────────────────────────────
    6. HELPER FUNCTIONS
@@ -1054,20 +1063,25 @@ function triggerRefresh() {
     return;
   }
 
-  /* Rate-limited — show countdown, then auto-fire when ready */
+  /* Rate-limited — show countdown, then auto-fire when ready.
+   * IMPORTANT: save the real original HTML NOW (before overwriting
+   * with countdown text) so setRefreshBtnNormal can restore it. */
   if (btn) {
+    /* Capture and store real original HTML before any changes */
+    var realOrig = btn.innerHTML;
+    btn.setAttribute('data-original', realOrig);
     btn.disabled = true;
-    /* Live countdown ticker */
+
     var secs = Math.ceil(remaining / 1000);
     btn.innerHTML = '⏳ ' + secs + 's…';
+
     var ticker = setInterval(function() {
       secs--;
       if (secs > 0) {
         btn.innerHTML = '⏳ ' + secs + 's…';
       } else {
         clearInterval(ticker);
-        btn.disabled = false;
-        /* Auto-fire the refresh after the countdown */
+        /* Auto-fire — setRefreshBtnLoading will find data-original already set */
         refreshTimer = 180;
         var pf = document.getElementById('progress-fill');
         if (pf) pf.style.width = '100%';
@@ -1084,7 +1098,10 @@ function setRefreshBtnLoading() {
   var btn = document.getElementById('btn-refresh');
   if (!btn) return;
   btn.disabled = true;
-  btn.setAttribute('data-original', btn.innerHTML);
+  /* Only save original if not already saved (prevents overwriting countdown state) */
+  if (!btn.getAttribute('data-original') || btn.getAttribute('data-original').includes('⏳')) {
+    btn.setAttribute('data-original', REFRESH_BTN_ORIGINAL);
+  }
   btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px">'
     + '<svg style="animation:spin 0.7s linear infinite;flex-shrink:0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>'
     + 'Checking…</span>';
@@ -1095,8 +1112,14 @@ function setRefreshBtnNormal() {
   var btn = document.getElementById('btn-refresh');
   if (!btn) return;
   btn.disabled = false;
+  /* Use stored original; fall back to the snapshot taken at page load */
   var orig = btn.getAttribute('data-original');
-  if (orig) btn.innerHTML = orig;
+  if (orig && !orig.includes('⏳') && !orig.includes('Checking')) {
+    btn.innerHTML = orig;
+  } else if (REFRESH_BTN_ORIGINAL) {
+    btn.innerHTML = REFRESH_BTN_ORIGINAL;
+  }
+  btn.removeAttribute('data-original');
 }
 
 /**

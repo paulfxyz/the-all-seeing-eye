@@ -1097,10 +1097,10 @@
 
     .theme-track {
       position: relative;
-      width: 58px; height: 30px;
+      width: 54px; height: 28px;  /* matches .btn height */
       background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: 15px;
+      border-radius: var(--radius-md);  /* matches .btn radius */
       display: flex;
       align-items: center;
       transition: background var(--ease), border-color var(--ease);

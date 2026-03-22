@@ -10,6 +10,36 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## 🔖 [1.9.0] — 2026-03-22
+
+### 🎨 Header Consistency + Refresh Button Fix
+
+---
+
+#### Refresh Button — "1s…" Stuck State Fixed
+
+- **Root cause:** When the rate-limit countdown reached zero and auto-fired `checkAll()`, it called `setRefreshBtnLoading()` — which saved the current innerHTML (`"⏳ 1s…"`) as `data-original`. When `setRefreshBtnNormal()` ran after the check, it restored `"⏳ 1s…"` instead of the real button SVG.
+- **Fix 1:** The countdown now captures `btn.innerHTML` into `realOrig` and saves it to `data-original` **before** overwriting with `"⏳ Ns…"` text.
+- **Fix 2:** `setRefreshBtnLoading()` now skips saving `data-original` if it already contains a countdown or spinner state.
+- **Fix 3:** `REFRESH_BTN_ORIGINAL` — a module-level constant that snapshots the real button HTML at page load (once, from the DOM). Used as the final fallback in `setRefreshBtnNormal()` to guarantee correct restoration even if `data-original` is stale.
+
+#### Header Buttons — Consistent Style
+
+- **Cog (PIN) button:** now shows `[⚙ SVG] PIN` text label — same format as GitHub, Webhook, Refresh, CSV. No more icon-only.
+- **? (Help) button:** now shows `[ℹ SVG] Help` text label — consistent with the rest.
+- **Theme toggle:** border-radius changed from `15px` to `var(--radius-md)` to match the rounded corner style of other buttons.
+
+### 🔄 Changed
+
+- `triggerRefresh()` — saves real original HTML before countdown starts
+- `setRefreshBtnLoading()` — skips `data-original` overwrite if already set
+- `setRefreshBtnNormal()` — falls back to `REFRESH_BTN_ORIGINAL` constant
+- `REFRESH_BTN_ORIGINAL` — new module-level constant, DOM snapshot at page load
+- HTML: `⚙️` button → `[cog SVG] PIN`, `?` button → `[info SVG] Help`
+- CSS: `.theme-track` border-radius aligned with `var(--radius-md)`
+
+---
+
 ## 🔖 [1.8.0] — 2026-03-22
 
 ### 🔐 Server-Side SSL Check + PIN Change Modal
