@@ -6,7 +6,7 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-2.0.2-brightgreen?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.1.0-brightgreen?style=for-the-badge)
 ![Self-hosted](https://img.shields.io/badge/self--hosted-no_server_needed-blue?style=for-the-badge)
 
 **Open-source uptime, DNS, SSL and latency monitor. One HTML file. Zero dependencies.**
@@ -123,13 +123,23 @@ open index.html
 
 The default PIN is **`123456`**.
 
-On your **first login**, after entering `123456` you will be automatically prompted to set a personal PIN — you can set one or click "Skip" to keep using the default. **Change it before deploying publicly.**
-
-Once inside the dashboard, the **⚙️ cog icon** in the header lets you change your PIN at any time — enter your current PIN, then your new PIN twice.
+On your **first login**, after entering `123456` you will be automatically prompted to set a personal PIN. Once inside the dashboard, the **⚙️ cog icon** in the More menu lets you change it at any time.
 
 **Change it before deploying publicly** — see [INSTALL.md](./INSTALL.md#changing-the-pin).
 
-The PIN is stored as a SHA-256 hash in `index.html` — no plaintext, ever.
+### How PIN persistence works (three-tier system)
+
+The PIN is stored as a SHA-256 hash — no plaintext, ever. When you change it, the new hash is saved in three places (most to least authoritative):
+
+| Tier | Storage | Scope | Survives incognito? |
+|---|---|---|---|
+| 1 | `ase_config.json` (via `config-write.php`) | Server — all browsers + devices | ✅ Yes |
+| 2 | `ase_pin` cookie | Current browser only | ❌ No |
+| 3 | Hardcoded in `index.html` | Deployment default only | ✅ Yes (but manual) |
+
+On every page load, `loadConfig()` reads `ase_config.json` **before the PIN overlay becomes interactive** — so the correct hash is always in memory when you type your PIN. The cookie provides an instant fallback (no network request) while the server fetch is in-flight.
+
+If `config-write.php` is unavailable (static host, no PHP), tier 1 is silently skipped — tier 2 (cookie) still works for the same browser, and the success modal tells you the hash to paste into `index.html` manually.
 ## ⚙️ Automated Checks (cron)
 
 The dashboard auto-refreshes every 3 minutes when open. For 24/7 monitoring:
@@ -242,11 +252,39 @@ SPF and DMARC are parsed from `TXT` and `_dmarc.TXT` records respectively:
 
 On startup, `loadDomainList()` tries `fetch('./domains.list')`. If the file is present and non-empty, it loads those domains and also seeds SSL expiry from `domains.json` (if available). If not (static host, local file, 404), it silently falls back to the built-in top-30 list. Custom domains added via the UI are pushed directly into the live DOMAINS array with a `fullScan=true` flag, triggering a full NS/MX/TXT/DMARC check immediately.
 
+### Config persistence layer (`config-write.php` + `ase_config.json`)
+
+A PHP endpoint (`config-write.php`) provides server-side persistence for settings that must survive across browsers and sessions. On every page load, `loadConfig()` runs before the PIN overlay becomes interactive:
+
+1. Reads `ase_pin` cookie → overrides `PIN_HASH` in memory immediately (instant, no network)
+2. Fetches `config-write.php` (no-cache) → if `pin_hash` present and valid, overrides again (authoritative — works across all devices)
+3. Applies `theme` preference if stored
+
+When a PIN change is confirmed, `spPersistHash()` calls `_writePinCookie()` (instant) and `saveConfig({ pin_hash })` (server). Both succeed on a PHP host; only the cookie works on static hosts.
+
+`ase_config.json` is written atomically (temp file + `rename()`) with `LOCK_EX` file locking to prevent corruption. All inputs are validated server-side (hash format, theme enum, RFC-1123 domain names).
+
+### Auto-scan on login
+
+`initDashboard()` always fires `checkAll()` automatically after unlock — no Refresh button click required. The sequence:
+1. `loadDomainList()` → fetch domains.list + seed SSL from domains.json
+2. `renderTable()` → render skeleton immediately (domain names visible right away)
+3. `checkAll()` → fire DNS+SSL checks in batches; table populates progressively
+
+The skeleton → progressive fill is intentional UX: the user sees their domains listed instantly, then watches them come alive as checks resolve batch by batch.
+
 ---
 
 ## 📝 Changelog
 
 > Full changelog: **[CHANGELOG.md](./CHANGELOG.md)**
+
+### 🔖 v2.1.0 — 2026-03-22
+- 🔐 **feat:** PIN now persists across all browsers + incognito via `ase_config.json` (config-write.php)
+- 🍪 **feat:** `ase_pin` cookie as immediate browser-local fallback for PIN hash
+- ⚙️ **feat:** `loadConfig()` applies server config before PIN overlay — correct PIN always in memory
+- 🎨 **feat:** Theme preference now saved to server config and restored on next visit
+- 🔄 **fix:** `initDashboard()` auto-fires full scan on login — no manual Refresh needed
 
 ### 🔖 v2.0.2 — 2026-03-22
 - 🌟 **feat:** Light theme is now the default on first load

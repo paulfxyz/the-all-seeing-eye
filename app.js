@@ -97,6 +97,105 @@ function sha256(ascii) {
 
 
 /* ────────────────────────────────────────────────────────────────
+   1b. SERVER-SIDE CONFIG  (ase_config.json via config-write.php)
+   ─────────────────────────────────────────────────────────────────
+   Provides persistent, server-side storage for settings that must
+   survive across browsers, incognito sessions, and devices.
+
+   Fields stored in ase_config.json:
+     • pin_hash        — SHA-256 of the current PIN (overrides hardcoded value)
+     • theme           — "light" | "dark" default preference
+     • custom_domains  — array of user-added domain names
+
+   Strategy:
+     1. On page load,  loadConfig() fetches ase_config.json (if present).
+        If pin_hash differs from the in-memory default → override PIN_HASH.
+     2. After any PIN change, saveConfig({pin_hash: newHash}) posts to
+        config-write.php — no HTTP PUT to index.html, no fragile file rewrite.
+     3. Cookie fallback: pin_hash is ALSO stored in ase_pin cookie so that
+        even if config-write.php is unavailable, the hash persists for the
+        current browser (but not across browsers/incognito).
+
+   Why not localStorage?
+     localStorage is blocked in sandboxed iframes (Perplexity preview, etc.)
+     Cookies work in all contexts. ase_config.json works across all devices.
+   ──────────────────────────────────────────────────────────────── */
+
+/** In-memory config (merged from ase_config.json + cookie on startup) */
+var _asmConfig = {};
+
+/**
+ * Fetch ase_config.json and apply any stored overrides.
+ * Called ONCE at startup, before the PIN overlay is shown.
+ * Returns a Promise that resolves when config is applied.
+ */
+async function loadConfig() {
+  /* 1. Try cookie first (instant, no network) */
+  var cookieHash = _readPinCookie();
+  if (cookieHash) {
+    PIN_HASH = cookieHash;
+  }
+
+  /* 2. Try server config (authoritative, works across devices/incognito) */
+  try {
+    var res = await fetch('./config-write.php', { cache: 'no-cache' });
+    if (res.ok) {
+      var cfg = await res.json();
+      _asmConfig = cfg;
+
+      /* Apply PIN hash if present and valid */
+      if (cfg.pin_hash && /^[a-f0-9]{64}$/.test(cfg.pin_hash)) {
+        PIN_HASH = cfg.pin_hash;
+        _writePinCookie(cfg.pin_hash); /* keep cookie in sync */
+      }
+
+      /* Apply theme preference */
+      if (cfg.theme === 'dark' || cfg.theme === 'light') {
+        var cb = document.getElementById('theme-checkbox');
+        document.documentElement.setAttribute('data-theme', cfg.theme);
+        if (cb) cb.checked = (cfg.theme === 'light');
+      }
+    }
+  } catch(e) {
+    /* config-write.php unavailable (static host, permissions) — silently continue */
+  }
+}
+
+/**
+ * Persist a partial config update to config-write.php.
+ * Only the provided fields are updated; others remain unchanged.
+ *
+ * @param {Object} partial  e.g. { pin_hash: '...' } or { theme: 'dark' }
+ * @returns {Promise<boolean>}  true if saved to server
+ */
+async function saveConfig(partial) {
+  try {
+    var res = await fetch('./config-write.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(partial)
+    });
+    return res.ok;
+  } catch(e) {
+    return false;
+  }
+}
+
+/* ── PIN cookie helpers (fallback persistence for PIN hash) ── */
+
+/** Read the ase_pin cookie. Returns the 64-char hash or null. */
+function _readPinCookie() {
+  var m = document.cookie.match(/(?:^|; )ase_pin=([a-f0-9]{64})/);
+  return m ? m[1] : null;
+}
+
+/** Write the ase_pin cookie (1-year expiry, SameSite=Lax). */
+function _writePinCookie(hash) {
+  document.cookie = 'ase_pin=' + hash + '; max-age=31536000; path=/; SameSite=Lax';
+}
+
+
+/* ────────────────────────────────────────────────────────────────
    2. PIN GATE
    PIN "123456" → stored as SHA-256 hash only. Never plaintext.
    Buttons use onclick attributes (set in HTML) — no event listeners.
@@ -168,7 +267,8 @@ document.addEventListener('keydown', function(e) {
 /* ────────────────────────────────────────────────────────────────
    3. THEME SWITCH
    checkbox unchecked = dark mode, checked = light mode.
-   Defaults to light (v2.0.2+). No storage — state lives in the checkbox.
+   Defaults to light (v2.0.2+). loadConfig() may override with server preference.
+   Theme changes are persisted to ase_config.json via saveConfig().
    ──────────────────────────────────────────────────────────────── */
 (function() {
   document.documentElement.setAttribute('data-theme', 'light');
@@ -176,7 +276,10 @@ document.addEventListener('keydown', function(e) {
   if (cb) {
     cb.checked = true; /* checked = light mode */
     cb.addEventListener('change', function() {
-      document.documentElement.setAttribute('data-theme', this.checked ? 'light' : 'dark');
+      var theme = this.checked ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      /* Persist theme preference to server config */
+      saveConfig({ theme: theme });
     });
   }
 })();
@@ -1754,15 +1857,13 @@ function spConfirm() {
   PIN_HASH = newHash;
   document.getElementById('sp-error').textContent = '';
 
-  /* Attempt to persist the new hash into index.html via HTTP PUT */
+  /* Persist via config-write.php + cookie (replaces unreliable HTTP PUT) */
   spPersistHash(newHash).then(function(saved) {
     var overlay = document.getElementById('set-pin-overlay');
     if (overlay) overlay.style.display = 'none';
-    if (!saved) {
-      /* PUT failed — show the hash so they can update manually */
-      showPinSuccessModal(newHash);
-    }
-    initDashboard();
+    /* Show success modal — pass null if server-saved (no manual step needed),
+       or the hash if config-write.php unavailable (static host fallback) */
+    showPinSuccessModal(saved ? null : newHash);
   });
 }
 
@@ -1845,38 +1946,21 @@ function showPinSuccessModal(newHash) {
 }
 
 /**
- * Try to rewrite the PIN_HASH line in index.html via HTTP PUT.
- * This works on servers that support it (Apache mod_dav, Nginx with
- * dav_methods, or a custom write endpoint). Fails silently on static
- * hosts — the user gets a manual instruction dialog instead.
+ * Persist a new PIN hash via config-write.php → ase_config.json.
+ * Also writes to the ase_pin cookie as an immediate fallback.
+ *
+ * Replaces the old HTTP PUT approach (which required WebDAV/mod_dav
+ * and silently failed on most shared hosts). ase_config.json is
+ * written by a same-origin PHP script and works on any PHP host.
  *
  * @param {string} newHash — the new SHA-256 hash to write
- * @returns {Promise<boolean>} true if successfully saved
+ * @returns {Promise<boolean>} true if saved to server
  */
 async function spPersistHash(newHash) {
-  try {
-    /* Fetch the current index.html source */
-    var res = await fetch('./index.html', { cache: 'no-cache' });
-    if (!res.ok) return false;
-    var src = await res.text();
-
-    /* Replace the PIN_HASH line — match both the old default and any previous custom hash */
-    var updated = src.replace(
-      /var PIN_HASH = '[a-f0-9]{64}';/,
-      "var PIN_HASH = '" + newHash + "';"
-    );
-    if (updated === src) return false; /* no replacement made */
-
-    /* PUT the updated file back */
-    var put = await fetch('./index.html', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'text/html' },
-      body: updated
-    });
-    return put.ok;
-  } catch(e) {
-    return false;
-  }
+  /* Always update the cookie immediately (browser-local fallback) */
+  _writePinCookie(newHash);
+  /* Attempt server-side persistence via config-write.php */
+  return saveConfig({ pin_hash: newHash });
 }
 
 
@@ -2044,16 +2128,33 @@ document.addEventListener('click', function(e) {
   }
 });
 
+/**
+ * initDashboard — called after successful PIN unlock (or webhook mode).
+ * Loads domain list, renders skeleton table immediately, then fires
+ * a full DNS+SSL check automatically — no manual Refresh needed.
+ */
 async function initDashboard() {
   await loadDomainList();
-  renderTable();
+  renderTable();   /* render skeleton with domain names right away */
   updateStats();
+  /* Auto-scan fires immediately on login — table populates progressively */
   await checkAll();
 }
 
-/* On page load: check for webhook mode first. If not webhook, show PIN. */
-if (!checkWebhookMode()) {
-  /* Normal mode — PIN gate is already visible in the HTML.
-     initDashboard() is called by pinCheck() after successful unlock. */
-  console.log('[Eye] Ready. Waiting for PIN...');
-}
+/* ── Page bootstrap ─────────────────────────────────────────────
+   Order of operations on every page load:
+     1. loadConfig()     — fetch ase_config.json (may override PIN_HASH + theme)
+     2. checkWebhookMode() — if webhook.do is calling us, run headless and exit
+     3. PIN overlay     — shown by default in HTML; initDashboard() called on unlock
+   ──────────────────────────────────────────────────────────────── */
+(async function bootstrap() {
+  /* Load server config BEFORE showing PIN overlay — so the correct PIN hash
+     is in memory when the user enters their PIN. */
+  await loadConfig();
+
+  if (!checkWebhookMode()) {
+    /* Normal mode — PIN gate is already visible in the HTML.
+       initDashboard() is called by pinCheck() → checkFirstUse() after unlock. */
+    console.log('[Eye] Ready. Config loaded. Waiting for PIN...');
+  }
+})();

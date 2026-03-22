@@ -16,6 +16,8 @@ Runs entirely in the browser — no framework, no build step, no database.
 | `domains.stats` | CSV snapshot updated after every check (auto-created if writable) |
 | `domains.json` | Written by `update-stats.php` — feeds SSL expiry data to the browser |
 | `update-stats.php` | Server-side cron script — real TLS cert checks, writes `domains.json` |
+| `config-write.php` | PHP config endpoint — reads/writes `ase_config.json` (PIN, theme, custom domains) |
+| `ase_config.json` | Auto-created on first PIN change — persists settings across all browsers/devices |
 | `webhook.do` | Headless endpoint for external cron services (cron-job.org etc.) |
 | `INSTALL.md` | This file |
 
@@ -36,12 +38,18 @@ app.js              ← all JavaScript
 domains.list        ← your domain watchlist
 ```
 
-Optional but recommended for full SSL + stats functionality:
+Optional but recommended for full SSL + stats + persistence functionality:
 
 ```
 update-stats.php    ← PHP cron script (SSL expiry, DNS stats)
+ssl-check.php       ← per-domain SSL check endpoint (live cert queries)
+config-write.php    ← config persistence (PIN hash, theme, custom domains)
 webhook.do          ← external cron endpoint
 ```
+
+> **`config-write.php` requires write permission** on the directory to create
+> `ase_config.json`. Standard cPanel/SiteGround setups allow this by default
+> (files created by PHP run as your user). No `chmod 777` needed.
 
 Example on SiteGround:
 
@@ -265,7 +273,23 @@ Enter the PIN — default is **`123456`**. Change it before going live (see belo
 
 The default PIN is `123456`. **Change it before deploying publicly.**
 
-**1. Compute the SHA-256 hash of your new PIN** — paste into your browser console (F12):
+### Recommended: change via the dashboard (v2.1.0+)
+
+1. Log in with the current PIN
+2. Click **More ⋮** → **Change PIN**
+3. Enter your current PIN, then your new PIN twice
+
+The new hash is saved to `ase_config.json` via `config-write.php` **and** written to the `ase_pin` browser cookie. This means:
+- Any browser, any incognito session, any device on the same server will use the new PIN
+- No file editing, no re-upload needed
+
+> ⚠️ `config-write.php` must be uploaded and the directory must be writable for server-side persistence. If `config-write.php` is not available (static host), the new PIN is saved in the browser cookie only — it will work on the current browser but reset on new devices/browsers.
+
+### Manual method (static hosts / pre-deployment)
+
+If you want to set the PIN before first deployment:
+
+**1. Compute the SHA-256 hash** — paste into your browser console (F12):
 
 ```javascript
 const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourNewPIN'));
@@ -281,6 +305,30 @@ var PIN_HASH = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
 ```
 
 **3. Replace the hash** with your new one. Save. Re-upload `index.html`.
+
+### How PIN persistence works (three-tier)
+
+| Tier | Where | Scope | Survives incognito? |
+|---|---|---|---|
+| 1 | `ase_config.json` (server) | All browsers + devices | ✅ Yes |
+| 2 | `ase_pin` cookie (browser) | Current browser only | ❌ No |
+| 3 | `PIN_HASH` in `index.html` | Deployment default | ✅ Yes (but manual) |
+
+On every page load, `loadConfig()` fetches `ase_config.json` before showing the PIN prompt — so the correct PIN is always in memory.
+
+### ase_config.json — file permissions
+
+`ase_config.json` is written by `config-write.php` (PHP running as your cPanel user).
+Default SiteGround/cPanel directory permissions (755) allow this.
+
+If you see `"Failed to write config file"` in the browser console:
+```bash
+chmod 755 /home/YOURUSER/public_html/uptime/
+# Or if the directory is 644:
+chmod 755 /home/YOURUSER/public_html/uptime/
+```
+
+The file itself (`ase_config.json`) will be created with 644 permissions automatically.
 
 ---
 

@@ -10,6 +10,90 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## 🔖 [2.1.0] — 2026-03-22
+
+### 🔐 Persistent Settings · Auto-scan on Login · PHP Config Layer
+
+---
+
+#### Problem: PIN Resets on Incognito / New Browser
+
+The previous PIN persistence mechanism tried to rewrite `index.html` via an HTTP PUT request — effectively asking the web server to accept a direct file overwrite from the browser. This approach:
+- Requires WebDAV (`mod_dav` on Apache, or `dav_methods` on Nginx) — rarely enabled on shared hosting
+- Silently fails on virtually all SiteGround / cPanel setups
+- Has no effect across browsers or devices even when it works
+
+The result: every incognito session, new browser, or new device showed the default PIN (`123456`) — ignoring any custom PIN the user had set.
+
+#### Solution: `config-write.php` + `ase_config.json`
+
+A new PHP endpoint (`config-write.php`) provides a proper server-side persistence layer. It reads and writes a JSON file (`ase_config.json`) in the same directory.
+
+**`ase_config.json` stores:**
+- `pin_hash` — SHA-256 of the current PIN (overrides the hardcoded default in `index.html`)
+- `theme` — user's preferred colour theme (`"light"` or `"dark"`)
+- `custom_domains` — array of domains added via the Add Domain modal
+- `updated_at` — ISO 8601 timestamp of last write
+
+**Security measures in `config-write.php`:**
+- PIN hash validated: must be exactly 64 lowercase hex chars (`[a-f0-9]{64}`)
+- Theme validated: only `"light"` or `"dark"` accepted
+- Domain names validated against RFC-1123 hostname pattern
+- Max 200 custom domains
+- Atomic writes via temp file + `rename()` (avoids corruption on concurrent requests)
+- `LOCK_EX` file locking prevents race conditions
+- `Cache-Control: no-store` on all responses
+
+#### Three-tier PIN persistence (most to least authoritative)
+
+1. **`ase_config.json` via `config-write.php`** — server-side, works across all browsers, incognito sessions, and devices. Loaded on every page load before the PIN overlay is shown.
+2. **`ase_pin` cookie** — browser-local fallback, 1-year expiry. Applied instantly (no network request) before `config-write.php` responds. Kept in sync with the server config on every PIN change.
+3. **Hardcoded `PIN_HASH` in `index.html`** — last resort default (`123456`). Only used if neither of the above are available (fresh install, static host without PHP).
+
+#### `loadConfig()` — startup config fetch
+
+On every page load, `loadConfig()` runs before the PIN overlay becomes interactive:
+1. Reads `ase_pin` cookie → overrides `PIN_HASH` in memory immediately
+2. Fetches `./config-write.php` (no-cache) → if `pin_hash` present, overrides again (authoritative)
+3. Applies `theme` preference if stored (overrides the light default)
+4. Silently skips if `config-write.php` returns 404 (static host, no PHP)
+
+This means: when a user changes their PIN, the new hash is written to both `ase_config.json` and the `ase_pin` cookie. On any subsequent visit — any browser, any incognito session, any device on the same server — the correct PIN is loaded before the numpad is shown.
+
+#### Auto-scan on Login
+
+`initDashboard()` has always called `checkAll()` automatically. The root cause of the "empty table" perception was that `renderTable()` runs first (showing domain names with no data) — which is correct and intentional for progressive UX. 
+
+Clarified in code with a comment: the skeleton renders immediately, then `checkAll()` populates it progressively batch by batch. No manual Refresh click is needed after login.
+
+#### Theme persistence
+
+Theme toggle changes now call `saveConfig({ theme: 'light'|'dark' })` — so the user's preferred theme is restored on next visit (loaded by `loadConfig()` during bootstrap).
+
+### ✨ Added
+
+- **`config-write.php`** — PHP config persistence endpoint (GET + POST)
+- **`ase_config.json`** — server-side settings store (created on first PIN change)
+- **`loadConfig()`** — async startup function; reads config + applies overrides before PIN
+- **`saveConfig(partial)`** — posts partial config updates to `config-write.php`
+- **`_readPinCookie()` / `_writePinCookie(hash)`** — cookie helpers for PIN hash fallback
+- **`ase_pin` cookie** — browser-local PIN hash fallback (1-year, SameSite=Lax)
+- **`_asmConfig`** — in-memory config object (merged from server + cookie at startup)
+
+### 🔄 Changed
+
+- `app.js` — `spPersistHash()`: replaced HTTP PUT with `_writePinCookie()` + `saveConfig()`
+- `app.js` — theme IIFE: `saveConfig({ theme })` called on toggle change
+- `app.js` — `spConfirm()`: success modal shown whether or not server save succeeded
+- `app.js` — page bootstrap: replaced bare `if (!checkWebhookMode())` with an `async bootstrap()` IIFE that `await loadConfig()` before revealing the PIN gate
+- `app.js` — `initDashboard()`: comment clarified — auto-scan on login was always the behaviour; skeleton → progressive fill is intentional
+- `README.md` — new `What's in the box` row for `config-write.php` + `ase_config.json`
+- `README.md` — `🔑 Default PIN` section updated with three-tier persistence explanation
+- `README.md` — `🧠 How it works` section updated with config layer architecture
+- `INSTALL.md` — new section: `ase_config.json` permissions, PHP requirements for config-write.php
+
+---
+
 ## 🔖 [2.0.2] — 2026-03-22
 
 ### 🌟 Light Theme as Default
