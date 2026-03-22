@@ -368,6 +368,8 @@ The skeleton → progressive fill is intentional UX: the user sees their domains
 
 ### 🔖 v1.0.0 — 2026-03-22
 - 🎉 Initial release — live DNS checks, PIN gate, dark/light mode, `domains.list`, PHP cron, webhook, CSV export
+
+---
 ## ⬇️ Download
 
 **No git required.** Download the latest release as a ZIP:
