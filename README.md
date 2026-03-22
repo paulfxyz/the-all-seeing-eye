@@ -201,29 +201,44 @@ On startup, the app tries `fetch('./domains.list')`. If the file exists and is n
 
 > Full changelog: **[CHANGELOG.md](./CHANGELOG.md)**
 
+### 🔖 v1.7.0 — 2026-03-22
+- 🐛 **fix:** Refresh countdown now **auto-fires** `checkAll()` when it expires — no second click needed
+- 🗑️ **feat:** Category column removed from the table
+- 🌐 **fix:** NS/MX labels now show the registrar/provider name instead of generic "Own"
+- ✨ **feat:** Row shimmer animation during scan (faint accent pulse + opacity dim)
+- ⚡ Rate-limit reduced from 10s → 5s
+
+### 🔖 v1.6.0 — 2026-03-22
+- 🐛 **fix:** Removed IIFE that forced set-PIN modal on every incognito visit — login now works normally
+- 🗑️ Removed `index.standalone.html` — three-file structure (`index.html` + `app.css` + `app.js`) only
+
+### 🔖 v1.5.0 — 2026-03-22
+- 🔐 **feat:** First visit skips default PIN — set-PIN modal shown directly if no custom PIN is set
+- 🔐 **feat:** `showPinSuccessModal()` replaces browser `alert()` after PIN change
+- 📊 **feat:** `loadDomainList()` reads `domains.json` to seed SSL expiry before first DNS check
+- 🐛 **fix:** `update-stats.php` `$results[]` now includes `ssl_expiry` and `ssl_issuer`
+
 ### 🔖 v1.4.0 — 2026-03-22
-- 🔄 **fix:** SSL enrichment now works for all `domains.list` domains — `_sslChecked` session cache prevents redundant crt.sh queries; `loadDomainList()` reads `domains.json` from PHP cron as authoritative SSL source
-- 🎨 **feat:** Refresh button shows spinning icon + "Checking…" during scan, disabled to prevent double-click
-- 📦 **feat:** 
+- 📊 **feat:** `_sslChecked` session cache — prevents redundant crt.sh queries on every refresh
+- 🎨 **feat:** Refresh button shows spinning icon + "Checking…" during scan
+- ⏱️ crt.sh timeout reduced 8s → 5s
+
 ### 🔖 v1.3.0 — 2026-03-22
-- 📦 **feat:** CSS + JS split into `app.css` / `app.js` modules — `index.html` reduced from 130KB → 29KB (−78%)
+- 📦 **feat:** CSS + JS split into `app.css` / `app.js` — `index.html` reduced 130KB → 29KB (−78%)
 - ✨ **feat:** 500ms minimum row loading animation; animated sweep progress bar during full scan
-- 📝 **fix:** INSTALL.md Option B — ⚠️ `.htaccess` rule for `webhook.do` documented with SiteGround instructions
+- 📝 **fix:** INSTALL.md — `.htaccess` rule for `webhook.do` documented for cron-job.org / Option B
 
 ### 🔖 v1.2.0 — 2026-03-22
-- 🔐 **feat:** Live SSL expiry via crt.sh; `LE` badge for Let's Encrypt certs; PHP TLS handshake in `update-stats.php`
+- 🔐 **feat:** Live SSL expiry via crt.sh; `LE` badge for Let's Encrypt; PHP TLS handshake in `update-stats.php`
 - 🌐 **fix:** 7 BUILTIN NS entries corrected to `Domain` (facebook, apple, cloudflare…)
 
 ### 🔖 v1.1.0 — 2026-03-22
-- 🔐 **feat:** First-PIN-sets-PIN — default PIN triggers set-PIN modal before dashboard loads
-- 🌐 **feat:** Smart NS detection — SiteGround named explicitly; self-hosted NS labelled `Domain`
+- 🔐 **feat:** Smart NS detection — SiteGround, AWS, Azure, Cloudflare… "Domain" for self-hosted
 - 🐛 **fix:** DNS parsing hardened — TXT/DMARC quote stripping, MX priority prefix stripping
+- 🔐 **feat:** Set-PIN prompt appears after first login with default PIN
 
 ### 🔖 v1.0.0 — 2026-03-22
 - 🎉 Initial release — live DNS checks, PIN gate, dark/light mode, `domains.list`, PHP cron, webhook, CSV export
-
----
-
 ## ⬇️ Download
 
 **No git required.** Download the latest release as a ZIP:
