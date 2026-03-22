@@ -13,8 +13,8 @@
 
 Know what's up — and what isn't — across all your domains, at a glance. 🌐
 
-<a href="https://paulfleury.com/github/the-all-seeing-eye.png">
-  <img src="https://paulfleury.com/github/the-all-seeing-eye.png" alt="The All Seeing Eye — domain monitor dashboard" width="700" />
+<a href="https://paulfleury.com/github/all-seeing-eye.jpeg">
+  <img src="https://paulfleury.com/github/all-seeing-eye.jpeg" alt="The All Seeing Eye — domain monitor dashboard" width="700" />
 </a>
 
 *Click image to view full resolution*
