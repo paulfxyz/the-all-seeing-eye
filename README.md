@@ -81,50 +81,42 @@ Results appear **progressively** as each batch of 5 domains resolves — you see
 
 | File | Purpose |
 |---|---|
-| `index.standalone.html` | **← Use this for deployment.** Single-file build with CSS + JS inlined — just rename to `index.html` and upload. No other files needed. |
-| `index.html` | Modular shell — loads `app.css` + `app.js` as separate files. Better for development; browsers cache assets independently. |
-| `app.css` | All styles (41 KB) — loaded by the modular `index.html` |
-| `app.js` | All JavaScript (82 KB) — loaded by the modular `index.html` |
+| `index.html` | The full application — HTML shell that loads `app.css` and `app.js` |
+| `app.css` | All styles (41 KB) |
+| `app.js` | All JavaScript (82 KB) |
 | `domains.list` | Your domain watchlist — one domain per line, `#` for comments |
-| `domains.stats` | CSV snapshot updated after every refresh (requires server write access) |
-| `domains.json` | JSON snapshot written by `update-stats.php` — the browser reads this for SSL expiry dates |
+| `domains.stats` | CSV snapshot updated after every check (requires server write access) |
+| `domains.json` | Written by `update-stats.php` — feeds SSL expiry data to the browser |
 | `update-stats.php` | Server-side cron script — real TLS cert checks, writes `domains.json` |
 | `webhook.do` | Headless endpoint for external cron services (cron-job.org etc.) |
-| `INSTALL.md` | Full installation guide with SiteGround + cron-job.org instructions |
-
+| `INSTALL.md` | Full installation guide |
 ---
 
 ## 📦 Quick Start
 
 ### Drop-in install (any web server)
 
-> **Which file is the app?** Use `index.standalone.html` — rename it to `index.html` when uploading. It has CSS + JS fully inlined so it works as a single self-contained file. You do not need to upload `app.css` or `app.js` separately for a basic deploy.
-
 ```bash
-# 1. Clone the repo
+# 1. Clone the repo (or download the ZIP — link below)
 git clone https://github.com/paulfxyz/the-all-seeing-eye.git
 cd the-all-seeing-eye
 
-# 2. Rename the standalone build
-cp index.standalone.html index.html
+# 2. Upload all files to your web server
+# scp -r . user@yourhost:/public_html/uptime/
 
-# 3. Upload to your web server (SiteGround, Nginx, Apache…)
-# scp index.html domains.list update-stats.php webhook.do user@host:/public_html/uptime/
-
-# 4. Visit https://yourdomain.com/uptime/
-# On first visit you'll be prompted to set your PIN — no default to remember.
+# 3. Visit https://yourdomain.com/uptime/
+# Enter PIN 123456 → you'll be prompted to set a personal PIN
 ```
 
-No npm, no Composer, no build step.
+No npm, no Composer, no build step. Upload `index.html`, `app.css`, `app.js`, and `domains.list` — that's everything you need.
 
 ### Using as a local file
 
 ```bash
-open index.standalone.html
-# Opens in your browser with the built-in top-30 list.
-# (domains.list requires a local web server to load.)
+open index.html
+# Requires a local web server for domains.list to load.
+# Built-in top-30 list is used as fallback.
 ```
-
 ---
 
 ## 🔑 Default PIN
@@ -212,8 +204,7 @@ On startup, the app tries `fetch('./domains.list')`. If the file exists and is n
 ### 🔖 v1.4.0 — 2026-03-22
 - 🔄 **fix:** SSL enrichment now works for all `domains.list` domains — `_sslChecked` session cache prevents redundant crt.sh queries; `loadDomainList()` reads `domains.json` from PHP cron as authoritative SSL source
 - 🎨 **feat:** Refresh button shows spinning icon + "Checking…" during scan, disabled to prevent double-click
-- 📦 **feat:** `index.standalone.html` — self-contained single-file build (CSS + JS inlined), required for simple server deploys
-
+- 📦 **feat:** 
 ### 🔖 v1.3.0 — 2026-03-22
 - 📦 **feat:** CSS + JS split into `app.css` / `app.js` modules — `index.html` reduced from 130KB → 29KB (−78%)
 - ✨ **feat:** 500ms minimum row loading animation; animated sweep progress bar during full scan
@@ -237,17 +228,12 @@ On startup, the app tries `fetch('./domains.list')`. If the file exists and is n
 
 **No git required.** Download the latest release as a ZIP:
 
-👉 **[Download all-seeing-eye.zip](https://github.com/paulfxyz/the-all-seeing-eye/archive/refs/heads/main.zip)**
+👉 **[Download the ZIP](https://github.com/paulfxyz/the-all-seeing-eye/archive/refs/heads/main.zip)**
 
-Unzip it, upload the files to your web server, done. See [INSTALL.md](./INSTALL.md) for the full guide.
-
-> **Which file to upload?** If your server already has `app.css` and `app.js`:
-> use `index.html`. For a quick single-file deploy: rename `index.standalone.html` → `index.html` and upload just that one file.
-
+Unzip, upload `index.html` + `app.css` + `app.js` + `domains.list` to your server. See [INSTALL.md](./INSTALL.md) for the full guide.
 ---
 
 ## 🤝 Contributing
-
 
 Pull requests are very welcome! Ideas: SSL expiry live check, ping history graphs, Slack/email alerts, multi-user support, mobile layout improvements.
 

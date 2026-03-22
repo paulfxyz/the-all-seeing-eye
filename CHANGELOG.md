@@ -10,6 +10,34 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## 🔖 [1.6.0] — 2026-03-22
+
+### 🐛 PIN Flow Fix + Standalone Removed + Docs Cleaned
+
+---
+
+#### PIN Flow Fix — No More Forced Onboarding on Every Visit
+
+- **The problem:** An IIFE added in v1.5.0 checked `PIN_HASH === DEFAULT_PIN_HASH` on page load and immediately replaced the login overlay with the set-PIN modal. This meant every incognito visit triggered the set-PIN onboarding — making the site appear broken on the live `up.paulfleury.com` because users were met with a setup flow instead of a login screen.
+- **The fix:** The IIFE is removed. The login PIN overlay now shows normally for all visitors. After a successful login, `checkFirstUse()` runs and — only if the default PIN was used — prompts to set a new PIN. A visitor who just wants to use the dashboard with the default PIN types `123456` and is in.
+
+#### Standalone Build Removed
+
+- `index.standalone.html` removed from the repository. It was introduced to work around deployment issues but added confusion about which file to use.
+- The three-file structure (`index.html` + `app.css` + `app.js`) is the only supported format. All three must be in the same directory.
+- README and INSTALL.md cleaned of all standalone references.
+
+### 🔄 Changed
+
+- Removed IIFE that auto-redirected to set-PIN modal on page load
+- Removed `index.standalone.html` from repo
+- README `What's in the box` table — standalone removed, three-file structure explained
+- README Quick Start — simplified to three-file upload
+- INSTALL.md `What's in the ZIP` — standalone removed, three-file note added
+- INSTALL.md Step 1 — clean minimum files list
+
+---
+
 ## 🔖 [1.5.0] — 2026-03-22
 
 ### 🔐 PIN-Free First Visit + SSL via domains.json + README Download Link

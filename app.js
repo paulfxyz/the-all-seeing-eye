@@ -1423,24 +1423,7 @@ function checkFirstUse() {
   spUpdateDots();
 }
 
-/*
- * ON PAGE LOAD: check whether a PIN has been configured.
- * If PIN_HASH is still the default (meaning no custom PIN set yet),
- * show the set-PIN modal DIRECTLY — user never needs to type "123456".
- * The login overlay is hidden and the set-PIN flow takes over.
- * If a custom PIN is already set, the login overlay stays visible normally.
- */
-(function() {
-  if (PIN_HASH === DEFAULT_PIN_HASH) {
-    /* First-time visitor — hide PIN login, show set-PIN modal directly */
-    var loginOverlay = document.getElementById('pin-overlay');
-    if (loginOverlay) loginOverlay.style.display = 'none';
-    var setPinOverlay = document.getElementById('set-pin-overlay');
-    if (setPinOverlay) setPinOverlay.style.display = 'flex';
-    spPhase = 1; spPin1 = ''; spPin2 = '';
-    spUpdateDots();
-  }
-})();
+/* PIN_HASH checked after login — see checkFirstUse() */
 
 /** Update the two rows of dots in the Set-PIN modal */
 function spUpdateDots(errorRow) {

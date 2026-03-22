@@ -7,75 +7,54 @@ Runs entirely in the browser — no framework, no build step, no database.
 
 ## What's in the ZIP
 
-### Two versions of the app — which one to use?
-
-| | `index.standalone.html` | `index.html` |
-|---|---|---|
-| **Use for** | Server deployment | Local development |
-| **How it works** | CSS + JS fully inlined — one self-contained file | Loads `app.css` and `app.js` as separate files |
-| **What to upload** | Just this one file (rename to `index.html`) | All three files: `index.html` + `app.css` + `app.js` |
-| **File size** | ~142 KB | 33 KB + 41 KB + 82 KB |
-| **Browser caching** | No (everything in one file) | Yes (CSS/JS cached separately) |
-| **Why it exists** | Some servers serve files without importing siblings correctly; a single self-contained file eliminates all path/MIME issues | Easier to diff, read and maintain during development |
-
-> **TL;DR: upload `index.standalone.html`, rename it to `index.html`. Done.**
-
-### Full file manifest
-
 | File | Purpose |
 |---|---|
-| `index.standalone.html` | **← Deploy this.** Self-contained: CSS + JS inlined. Rename to `index.html` when uploading. |
-| `index.html` | Modular shell — references `app.css` + `app.js`. Use for local development. |
-| `app.css` | All styles (41 KB) — only needed alongside the modular `index.html` |
-| `app.js` | All JavaScript (82 KB) — only needed alongside the modular `index.html` |
+| `index.html` | The application — HTML shell that loads `app.css` and `app.js` |
+| `app.css` | All styles (41 KB) — must be in the same directory as `index.html` |
+| `app.js` | All JavaScript (82 KB) — must be in the same directory as `index.html` |
 | `domains.list` | Your domain watchlist — one domain per line, `#` for comments |
-| `domains.stats` | CSV snapshot updated after every check (requires server write access) |
-| `domains.json` | JSON written by `update-stats.php` — the browser reads this for SSL expiry dates |
+| `domains.stats` | CSV snapshot updated after every check (auto-created if writable) |
+| `domains.json` | Written by `update-stats.php` — feeds SSL expiry data to the browser |
 | `update-stats.php` | Server-side cron script — real TLS cert checks, writes `domains.json` |
 | `webhook.do` | Headless endpoint for external cron services (cron-job.org etc.) |
 | `INSTALL.md` | This file |
 
+> **`index.html`, `app.css`, and `app.js` must all be in the same directory.**
+> The HTML file loads the other two via relative paths (`./app.css`, `./app.js`).
+> If your server can't serve them together, check that all three were uploaded
+> and that directory listing / MIME types are configured correctly.
 ---
 
 ## Step 1 — Upload the files
 
-> **Which file is your `index.html`?**
->
-> Use **`index.standalone.html`** — rename it to `index.html` before uploading.
-> It has everything inlined (CSS + JS) and works as a single file on any server.
-> You do not need to upload `app.css` or `app.js` separately.
->
-> The reason this exists: after v1.3.0 split CSS and JS into separate modules,
-> some server configurations had trouble serving sibling files correctly.
-> `index.standalone.html` eliminates all path and MIME-type issues by bundling
-> everything into one file — the same approach used for the top-30 demo.
-
-**Minimum files to upload for a working dashboard:**
+Upload these files to a directory on your hosting. All three must be in the **same folder**:
 
 ```
-index.standalone.html  → rename to index.html
-domains.list           → your domain watchlist
+index.html          ← the app
+app.css             ← all styles
+app.js              ← all JavaScript
+domains.list        ← your domain watchlist
 ```
 
-**Additional files for full functionality (cron + webhook):**
+Optional but recommended for full SSL + stats functionality:
 
 ```
-update-stats.php       → PHP cron script (SSL expiry, DNS stats)
-webhook.do             → external cron endpoint
-domains.stats          → created automatically (optional to pre-upload)
-domains.json           → created automatically by update-stats.php
+update-stats.php    ← PHP cron script (SSL expiry, DNS stats)
+webhook.do          ← external cron endpoint
 ```
 
-Upload these to a directory on your hosting, e.g.:
+Example on SiteGround:
 
 ```
-/public_html/uptime/
+/public_html/uptime/index.html
+/public_html/uptime/app.css
+/public_html/uptime/app.js
+/public_html/uptime/domains.list
 ```
 
-So your dashboard is at `https://yourdomain.com/uptime/`
+Dashboard will be live at `https://yourdomain.com/uptime/`
 
-Default file permissions (644) are fine. No `chmod 666` needed.
-
+Default file permissions (644) are fine for everything. No `chmod 666` needed.
 ---
 
 ## Step 2 — Configure your domain list
