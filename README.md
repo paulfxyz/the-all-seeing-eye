@@ -38,7 +38,7 @@ And I wanted it to be **self-hosted**, **PIN-protected**, and look good.
 
 This project was designed and built **in collaboration with [Perplexity Computer](https://www.perplexity.ai/computer)** — from architecture through implementation, debugging the SHA-256 caching bug, fixing sandboxed iframe PIN issues, and designing the live progressive DNS scan. A real example of human + AI building something genuinely useful.
 
-> 💡 If you manage multiple domains and want a beautiful, self-hosted status page — this is for you. Free, open-source, one HTML file.
+> 💡 If you manage multiple domains and want a beautiful, self-hosted status page — this is for you. Free, open-source, beautiful, simple to use.
 
 ---
 
