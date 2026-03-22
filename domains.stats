@@ -1,0 +1,31 @@
+Timestamp,Rank,Domain,Category,Status,Latency (ms),SSL Days,NS,MX,DMARC,SPF
+2026-03-22T00:08:16Z,1,google.com,search,UNKNOWN,,57,Google,Google,reject,~all
+2026-03-22T00:08:16Z,2,youtube.com,video,UNKNOWN,,57,Google,Google,reject,~all
+2026-03-22T00:08:16Z,3,facebook.com,social,UNKNOWN,,8,Own,Own,reject,~all
+2026-03-22T00:08:16Z,4,instagram.com,social,UNKNOWN,,8,Own,Own,reject,~all
+2026-03-22T00:08:16Z,5,chatgpt.com,ai,UNKNOWN,,76,Cloudflare,Google,quarantine,~all
+2026-03-22T00:08:16Z,6,x.com,social,UNKNOWN,,41,Own,Google,reject,~all
+2026-03-22T00:08:16Z,7,reddit.com,social,UNKNOWN,,61,AWS,Google,reject,~all
+2026-03-22T00:08:16Z,8,wikipedia.org,content,UNKNOWN,,46,Wikimedia,Own,reject,~all
+2026-03-22T00:08:16Z,9,whatsapp.com,comm,UNKNOWN,,8,Own,Own,reject,~all
+2026-03-22T00:08:16Z,10,bing.com,search,UNKNOWN,,132,Azure,Microsoft,reject,~all
+2026-03-22T00:08:16Z,11,tiktok.com,video,UNKNOWN,,85,Akamai,Google,quarantine,~all
+2026-03-22T00:08:16Z,12,amazon.com,shop,UNKNOWN,,307,Own,Amazon SES,reject,~all
+2026-03-22T00:08:16Z,13,yahoo.com,news,UNKNOWN,,157,Own,Own,reject,~all
+2026-03-22T00:08:16Z,14,linkedin.com,social,UNKNOWN,,180,NS1,Microsoft,reject,~all
+2026-03-22T00:08:16Z,15,netflix.com,video,UNKNOWN,,333,AWS,Google,quarantine,~all
+2026-03-22T00:08:16Z,16,duckduckgo.com,search,UNKNOWN,,273,NS1,Mimecast,reject,~all
+2026-03-22T00:08:16Z,17,twitch.tv,video,UNKNOWN,,78,AWS,Google,quarantine,~all
+2026-03-22T00:08:16Z,18,github.com,dev,UNKNOWN,,75,Own,Google,reject,~all
+2026-03-22T00:08:16Z,19,discord.com,comm,UNKNOWN,,69,Cloudflare,Google,quarantine,~all
+2026-03-22T00:08:16Z,20,microsoft.com,product,UNKNOWN,,168,Azure,Microsoft,reject,~all
+2026-03-22T00:08:16Z,21,apple.com,product,UNKNOWN,,64,Own,Own,reject,~all
+2026-03-22T00:08:16Z,22,office.com,product,UNKNOWN,,327,Azure,Microsoft,reject,~all
+2026-03-22T00:08:16Z,23,temu.com,shop,UNKNOWN,,145,Azure,Google,quarantine,~all
+2026-03-22T00:08:16Z,24,canva.com,product,UNKNOWN,,90,AWS,Google,reject,~all
+2026-03-22T00:08:16Z,25,spotify.com,content,UNKNOWN,,272,Google,Google,reject,~all
+2026-03-22T00:08:16Z,26,openai.com,ai,UNKNOWN,,33,Azure,Google,quarantine,~all
+2026-03-22T00:08:16Z,27,cloudflare.com,cloud,UNKNOWN,,80,Own,Google,reject,~all
+2026-03-22T00:08:16Z,28,stackoverflow.com,dev,UNKNOWN,,59,Cloudflare,Google,reject,~all
+2026-03-22T00:08:16Z,29,nytimes.com,news,UNKNOWN,,175,AWS,Google,reject,~all
+2026-03-22T00:08:16Z,30,pinterest.com,social,UNKNOWN,,155,Own,Own,quarantine,~all

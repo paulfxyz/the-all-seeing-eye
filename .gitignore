@@ -1,0 +1,9 @@
+# Cron log (may contain sensitive path info)
+cron.log
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+*.swp

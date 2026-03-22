@@ -1,0 +1,35 @@
+# All-Seeing-Eye — Domain List
+# One domain per line. Lines starting with # are ignored.
+# This file is loaded at runtime. If missing, the built-in top-30 list is used.
+# Format: just the bare domain, e.g. google.com
+
+google.com
+youtube.com
+facebook.com
+instagram.com
+chatgpt.com
+x.com
+reddit.com
+wikipedia.org
+whatsapp.com
+bing.com
+tiktok.com
+amazon.com
+yahoo.com
+linkedin.com
+netflix.com
+duckduckgo.com
+twitch.tv
+github.com
+discord.com
+microsoft.com
+apple.com
+office.com
+temu.com
+canva.com
+spotify.com
+openai.com
+cloudflare.com
+stackoverflow.com
+nytimes.com
+pinterest.com
