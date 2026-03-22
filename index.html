@@ -131,6 +131,16 @@
     </div>
   </a>
 
+  <!-- Theme toggle: right of logo, before action buttons -->
+  <label class="theme-switch" title="Toggle light/dark mode">
+    <input type="checkbox" id="theme-checkbox" role="switch" aria-label="Toggle colour theme">
+    <span class="theme-track">
+      <span class="theme-thumb"></span>
+      <span class="theme-icon theme-icon-dark">🌙</span>
+      <span class="theme-icon theme-icon-light">☀️</span>
+    </span>
+  </label>
+
   <div class="header-actions">
     <!-- Primary actions: always visible -->
     <button class="btn btn-accent" id="btn-add" onclick="openAddModal()">
@@ -172,15 +182,6 @@
       </div>
     </div>
 
-    <!-- Theme toggle: always visible, height-matched to buttons -->
-    <label class="theme-switch" title="Toggle light/dark mode">
-      <input type="checkbox" id="theme-checkbox" role="switch" aria-label="Toggle colour theme">
-      <span class="theme-track">
-        <span class="theme-thumb"></span>
-        <span class="theme-icon theme-icon-dark">🌙</span>
-        <span class="theme-icon theme-icon-light">☀️</span>
-      </span>
-    </label>
   </div>
 </header>
 

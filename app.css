@@ -1094,6 +1094,9 @@
       -webkit-user-select: none;
       /* Match .btn height so it aligns perfectly in the header */
       height: 32px;
+      /* When placed as a direct header child, keep it adjacent to the logo
+         and push header-actions to the far right */
+      margin-right: auto;
     }
 
     .theme-track {
@@ -1260,15 +1263,16 @@
 
     .header-dropdown-menu {
       display: none;
-      position: absolute;
-      top: calc(100% + 6px);
-      right: 0;
+      /* Fixed positioning escapes the sticky header stacking context,
+         allowing the menu to render above all other page content.
+         top/right are set dynamically by toggleHeaderMenu() in app.js. */
+      position: fixed;
       min-width: 180px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-lg);
-      z-index: 1000;
+      z-index: 9999;
       overflow: hidden;
       animation: card-in 0.15s cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -1298,11 +1302,5 @@
     .dropdown-item:last-child { border-bottom: none; }
     .dropdown-item:hover { background: var(--surface-2); color: var(--text); }
 
-    /* Close dropdown when clicking outside */
-    .header-dropdown-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 999;
-    }
-    .header-dropdown-backdrop.open { display: block; }
+    /* Outside-click is handled by document.addEventListener in app.js
+       (backdrop div approach removed — caused z-index stacking context conflicts) */

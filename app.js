@@ -527,7 +527,9 @@ function renderTable() {
     var leBadge = (d.sslIssuer === 'LE')
       ? '<span class="le-badge">LE</span>' : '';
     var dmarcLabel  = { reject:'✓ reject', quarantine:'~ quarantine', none:'~ none', missing:'✗ missing' }[d.dmarc] || '—';
-    var spfCls      = d.spf === '~all' ? 'spf-soft' : (d.spf ? 'spf-pass' : 'spf-missing');
+    // Both ~all (soft fail) and -all (hard fail) are valid SPF — display green.
+    // The tooltip already shows the full SPF record for detail.
+    var spfCls      = d.spf ? 'spf-pass' : 'spf-missing';
     var spfLabel    = d.spf ? '✓ ' + d.spf : '✗ missing';
     /* Per-row actions: refresh icon always, delete only for custom domains */
     var rowBtnId = 'rbtn-' + d.domain.replace(/\./g,'-');
@@ -2008,36 +2010,39 @@ document.addEventListener('keydown', function(e) {
 
 function toggleHeaderMenu(e) {
   e.stopPropagation();
-  var menu      = document.getElementById('header-dropdown-menu');
-  var backdrop  = document.getElementById('header-dropdown-backdrop');
-  var toggle    = e.currentTarget;
-  var isOpen    = menu.classList.contains('open');
+  var menu   = document.getElementById('header-dropdown-menu');
+  var toggle = e.currentTarget;
+  var isOpen = menu.classList.contains('open');
   if (isOpen) {
     closeHeaderMenu();
   } else {
+    /* Position the menu relative to the toggle button using fixed coords
+       so it escapes the header's stacking context (position:sticky z-index:100) */
+    var rect = toggle.getBoundingClientRect();
+    menu.style.top   = (rect.bottom + 6) + 'px';
+    menu.style.right = (window.innerWidth - rect.right) + 'px';
+    menu.style.left  = 'auto';
     menu.classList.add('open');
-    if (backdrop) backdrop.classList.add('open');
     toggle.setAttribute('aria-expanded', 'true');
   }
 }
 
 function closeHeaderMenu() {
-  var menu      = document.getElementById('header-dropdown-menu');
-  var backdrop  = document.getElementById('header-dropdown-backdrop');
-  var toggle    = document.querySelector('.header-dropdown-toggle');
-  if (menu)     menu.classList.remove('open');
-  if (backdrop) backdrop.classList.remove('open');
-  if (toggle)   toggle.setAttribute('aria-expanded', 'false');
+  var menu   = document.getElementById('header-dropdown-menu');
+  var toggle = document.querySelector('.header-dropdown-toggle');
+  if (menu)   menu.classList.remove('open');
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
 }
 
-/* Backdrop div — added to body at init to catch outside clicks */
-(function() {
-  var bd = document.createElement('div');
-  bd.id = 'header-dropdown-backdrop';
-  bd.className = 'header-dropdown-backdrop';
-  bd.addEventListener('click', closeHeaderMenu);
-  document.body.appendChild(bd);
-})();
+/* Outside-click: close dropdown when clicking anywhere outside the .header-dropdown.
+   Uses document-level listener — avoids z-index stacking context conflicts
+   caused by the sticky header's own stacking context. */
+document.addEventListener('click', function(e) {
+  var dropdown = document.querySelector('.header-dropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    closeHeaderMenu();
+  }
+});
 
 async function initDashboard() {
   await loadDomainList();
