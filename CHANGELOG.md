@@ -10,6 +10,75 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## 🔖 [3.0.0] — 2026-03-22
+
+### 📱 Mobile-First Overhaul — Native PIN Keyboard · Rebuilt Modal System
+
+This release addresses two long-standing mobile UX regressions and adds a proper mobile PIN entry experience.
+
+---
+
+#### Problem 1 — Modal close button unreachable (root cause, finally)
+
+Previous attempts used `position: sticky` on the title bar inside the modal card. This silently failed because the card had `overflow: hidden` set — **`overflow: hidden` on a parent element completely disables `position: sticky` on any descendant**. This is a well-known but easy-to-miss CSS gotcha.
+
+**The correct fix:** redesign the modal as a proper flex column where the header and footer are `flex-shrink: 0` (they never compress) and the body is `flex: 1 1 auto; overflow-y: auto` (it scrolls). No `overflow: hidden` anywhere. The card uses `max-height: min(90vh, 700px)` to cap its size. Result: header and footer are **always** visible at fixed positions, regardless of how much content the body contains.
+
+New CSS classes (reusable for all current and future modals):
+```
+.modal-overlay   — backdrop, flex centering
+.modal-card      — flex column, max-height capped
+.modal-header    — flex-shrink:0, always visible at top
+.modal-body      — flex-grow, overflow-y:auto, touch scroll
+.modal-footer    — flex-shrink:0, always visible at bottom
+```
+
+Additionally: `openInfoModal()` and `openWebhookModal()` now reset `.modal-body` `scrollTop = 0` on every open — so the content always starts at the top.
+
+#### Problem 2 — Double-tap zoom on PIN numpad
+
+iOS and Android trigger a double-tap zoom when buttons don't have `touch-action: manipulation` set. The 300ms delay compounds this. Added `touch-action: manipulation` to the global CSS rule covering all `button`, `a`, `.btn`, `.pin-btn`, and `[onclick]` elements — eliminates the delay and zoom sitewide.
+
+#### New feature — Mobile PIN: native numeric keyboard
+
+On touch devices (`navigator.maxTouchPoints > 0`), the custom numpad is hidden and replaced with a native `<input type="password" inputmode="numeric">` field. This:
+- Triggers the **system numeric keyboard** (large, familiar, accessible)
+- Prevents iOS zoom (font-size 28px — above the 16px zoom threshold)
+- Auto-focuses when the PIN overlay appears
+- Dots still fill as you type (synced via `pinMobileInput()`)
+- On wrong PIN: input clears + red border flash + dots flash error
+- On correct PIN: input is dismissed, normal flow continues
+
+Why keep the numpad at all? It still works in sandboxed iframes (Perplexity Computer preview) where `focus()` may not trigger. The numpad handles non-touch contexts; the input handles touch contexts. Both call the same `pinBuffer` + `pinCheck()` logic.
+
+### ✨ Added
+
+- **`.modal-overlay`, `.modal-card`, `.modal-header`, `.modal-body`, `.modal-footer`** — new modal CSS system
+- **`.code-block`, `.code-label`, `.code-inline`** — reusable code display classes
+- **`.btn-ghost`** — ghost button variant
+- **`.pin-mobile-input`** — native numeric input for touch devices
+- **`pinMobileInput(el)`** — handler for mobile input: strips non-digits, syncs dots, runs check
+- **`initMobilePinInput()`** — IIFE: detects touch device, shows input, hides numpad, sets up observer
+- **`touch-action: manipulation`** — global CSS on all interactive elements
+
+### 🐛 Fixed
+
+- Modal close button: always visible via flex-column architecture (no more `position:sticky` + `overflow:hidden` conflict)
+- `openInfoModal()` / `openWebhookModal()`: reset `.modal-body scrollTop = 0` on open
+- Double-tap zoom: `touch-action: manipulation` eliminates 300ms delay on all buttons
+- Viewport meta: `viewport-fit=cover` added for notch/safe-area support
+
+### 🔄 Changed
+
+- `index.html` — webhook-modal and info-modal rebuilt with new CSS class system
+- `index.html` — viewport meta: added `viewport-fit=cover`
+- `index.html` — mobile PIN input `<input>` added inside `#pin-overlay`
+- `app.css` — full modal CSS system added (replacing inline styles)
+- `app.js` — `openWebhookModal()` / `openInfoModal()`: scroll body to top on open
+- `app.js` — `initMobilePinInput()` IIFE + `pinMobileInput()` handler added
+
+---
+
 ## 🔖 [2.3.1] — 2026-03-22
 
 ### 🚨 Critical Hotfix — Broken DOM (unclosed div)

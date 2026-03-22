@@ -1059,6 +1059,168 @@
 
 
 
+
+    /* ════════════════════════════════════════════════════════════
+       MODAL SYSTEM — v3.0.0
+       Architecture: overlay (flex centering) → card (flex-col, max-height)
+         → header (fixed height) → body (flex-grow, overflow-y:auto)
+         → footer (fixed height)
+
+       Key principle: overflow:hidden on a parent kills position:sticky on
+       children. Solution: DON'T use overflow:hidden on the card. Instead,
+       the card is a flex column with max-height, and only the body scrolls.
+       Header and footer are always visible — no sticky needed.
+    ════════════════════════════════════════════════════════════ */
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 8500;
+      background: rgba(15, 17, 23, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+      /* Enable scroll only as last resort on very small screens */
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      width: min(560px, 94vw);
+      /* Key: flex column with max-height — body scrolls, header/footer don't */
+      display: flex;
+      flex-direction: column;
+      max-height: min(90vh, 700px);
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
+      animation: card-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+      /* NO overflow:hidden — that would kill the body's scroll */
+    }
+    .modal-card-wide { width: min(620px, 94vw); }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-5) var(--space-6) var(--space-4);
+      border-bottom: 1px solid var(--border-soft);
+      /* Shrink-0 ensures it never collapses when body grows */
+      flex-shrink: 0;
+      background: var(--surface);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    }
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .modal-body {
+      flex: 1 1 auto;          /* grow to fill space between header + footer */
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: var(--space-5) var(--space-6);
+      overscroll-behavior: contain; /* prevent scroll leaking to page behind modal */
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: var(--space-3);
+      align-items: center;
+      padding: var(--space-3) var(--space-6);
+      border-top: 1px solid var(--border-soft);
+      flex-shrink: 0;
+      background: var(--surface);
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    }
+
+    /* Shared code block style used in webhook modal */
+    .code-block {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      font-size: var(--text-xs);
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      line-height: 1.9;
+    }
+    .code-label {
+      color: var(--text-faint);
+      margin-bottom: var(--space-2);
+      font-family: var(--font-display);
+      letter-spacing: 0.06em;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+    .code-inline {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    /* Ghost button variant */
+    .btn-ghost {
+      background: var(--surface-2);
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── Mobile PIN input ──────────────────────────────────────
+       Shown on touch/mobile devices as an alternative to the numpad.
+       Provides native numeric keyboard without zoom issues.
+       Hidden by default — shown via JS on touch device detection.
+    ─────────────────────────────────────────────────────────── */
+    .pin-mobile-input {
+      display: none; /* shown via JS on touch devices */
+      width: 200px;
+      height: 56px;
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 8px;
+      text-align: center;
+      color: var(--text);
+      margin-bottom: var(--space-4);
+      caret-color: var(--accent);
+      /* Prevent zoom on focus (iOS zooms in on inputs < 16px font — we set 28px) */
+      touch-action: manipulation;
+      -webkit-appearance: none;
+      outline: none;
+      transition: border-color var(--ease), box-shadow var(--ease);
+    }
+    .pin-mobile-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .pin-mobile-input.error {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(248,113,113,0.2);
+    }
+
+    /* ── touch-action: manipulation on ALL interactive elements ──
+       Prevents the 300ms delay and double-tap zoom on buttons/links
+       across the entire app. Safe — does not disable pinch-zoom.
+    ─────────────────────────────────────────────────────────── */
+    button, a, .pin-btn, .btn, label, [onclick] {
+      touch-action: manipulation;
+    }
+
+
     /* ── Modal close button — 44×44 tap target on all devices ── */
     .modal-close-btn {
       display: flex;

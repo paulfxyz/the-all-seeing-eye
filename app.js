@@ -1763,8 +1763,9 @@ function openWebhookModal() {
   var m = document.getElementById('webhook-modal');
   if (!m) return;
   m.classList.add('open');
-  /* Always scroll to top so the sticky header + close button are visible on mobile */
-  m.scrollTop = 0;
+  /* Reset body scroll to top on every open */
+  var body = m.querySelector('.modal-body');
+  if (body) body.scrollTop = 0;
 }
 function closeWebhookModal() {
   var m = document.getElementById('webhook-modal');
@@ -1774,8 +1775,9 @@ function openInfoModal() {
   var m = document.getElementById('info-modal');
   if (!m) return;
   m.classList.add('open');
-  /* Always scroll to top so the sticky header + close button are visible on mobile */
-  m.scrollTop = 0;
+  /* Reset body scroll to top on every open */
+  var body = m.querySelector('.modal-body');
+  if (body) body.scrollTop = 0;
 }
 function closeInfoModal() {
   var m = document.getElementById('info-modal');
@@ -2185,6 +2187,85 @@ async function initDashboard() {
   updateStats();
   /* Auto-scan fires immediately on login — table populates progressively */
   await checkAll();
+}
+
+
+/* ────────────────────────────────────────────────────────────────
+   MOBILE PIN INPUT
+   On touch devices, the custom numpad causes double-tap zoom.
+   Instead, we show a native <input type="password" inputmode="numeric">
+   which triggers the system numeric keyboard — no zoom, no double-tap
+   issues, full OS-level accessibility.
+
+   Detection: navigator.maxTouchPoints > 0 (covers iOS, Android, tablets).
+   The numpad is hidden on touch devices; the input field is shown.
+   Both paths call the same pinBuffer + pinCheck() logic.
+
+   Why not replace the numpad entirely?
+   The numpad still works in sandboxed iframes (Perplexity preview) where
+   focus() may not work. We keep both: numpad for non-touch, input for touch.
+   ──────────────────────────────────────────────────────────────── */
+
+(function initMobilePinInput() {
+  /* Only activate on genuine touch devices */
+  if (!navigator.maxTouchPoints || navigator.maxTouchPoints === 0) return;
+
+  var input   = document.getElementById('pin-mobile-input');
+  var grid    = document.querySelector('.pin-grid');
+  var hint    = document.querySelector('.pin-hint');
+  if (!input) return;
+
+  /* Show input, hide numpad */
+  input.style.display = 'block';
+  if (grid) grid.style.display = 'none';
+
+  /* Update hint text */
+  if (hint) hint.textContent = 'Tap to type your PIN';
+
+  /* Auto-focus the input when the PIN overlay becomes visible */
+  var observer = new MutationObserver(function() {
+    var overlay = document.getElementById('pin-overlay');
+    if (overlay && overlay.style.display !== 'none') {
+      setTimeout(function() { input.focus(); }, 100);
+    }
+  });
+  var overlay = document.getElementById('pin-overlay');
+  if (overlay) observer.observe(overlay, { attributes: true, attributeFilter: ['style'] });
+
+  /* Also focus immediately if overlay already visible */
+  if (overlay && overlay.style.display !== 'none') {
+    setTimeout(function() { input.focus(); }, 100);
+  }
+})();
+
+/**
+ * Handler for the mobile <input> PIN field.
+ * Keeps the input in sync with pinBuffer and calls pinCheck when 6 digits entered.
+ * @param {HTMLInputElement} el
+ */
+function pinMobileInput(el) {
+  /* Strip non-digits (some keyboards may inject other chars) */
+  var raw = el.value.replace(/\D/g, '').slice(0, 6);
+  el.value = raw;
+
+  /* Sync with pinBuffer so the dot indicators update */
+  pinBuffer = raw;
+  pinUpdateDots('normal');
+  document.getElementById('pin-error').textContent = '';
+
+  if (raw.length === 6) {
+    el.blur(); /* dismiss keyboard */
+    setTimeout(function() {
+      /* Run check — on failure, clear the input */
+      var valid = (sha256(pinBuffer) === PIN_HASH);
+      if (!valid) {
+        el.value = '';
+        el.classList.add('error');
+        setTimeout(function() { el.classList.remove('error'); }, 700);
+      }
+      pinCheck();
+    }, 150);
+  }
 }
 
 /* ── Page bootstrap ─────────────────────────────────────────────

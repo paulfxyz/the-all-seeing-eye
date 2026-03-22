@@ -6,7 +6,7 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-2.3.1-brightgreen?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.0.0-brightgreen?style=for-the-badge)
 ![Self-hosted](https://img.shields.io/badge/self--hosted-no_server_needed-blue?style=for-the-badge)
 
 **Open-source uptime, DNS, SSL and latency monitor. One HTML file. Zero dependencies.**
@@ -49,6 +49,7 @@ A **self-hosted infrastructure dashboard** that monitors uptime, DNS records, SS
 - 🔍 **Live DNS checks** via Cloudflare DoH (HTTPS, no CORS issues)
 - 🔐 **PIN-protected** dashboard (SHA-256 hashed — no plaintext stored)
 - 🌓 **Light / Dark mode** toggle (light by default)
+- 📱 **Mobile-first** — native numeric keyboard on touch devices, touch-optimised modals
 - ⚡ **Progressive scan** — rows light up one batch at a time as results arrive
 - 🔄 **Per-row refresh** — re-scan any single domain with the ↺ button
 - ⏱️ **Auto-refresh** every 3 minutes with live countdown
@@ -278,6 +279,12 @@ The skeleton → progressive fill is intentional UX: the user sees their domains
 ## 📝 Changelog
 
 > Full changelog: **[CHANGELOG.md](./CHANGELOG.md)**
+
+### 🔖 v3.0.0 — 2026-03-22
+- 📱 **feat:** Mobile PIN — native numeric keyboard input on touch devices (no double-tap zoom, no numpad)
+- 🏗️ **fix:** Modal architecture rebuilt — header + scrollable body + footer as flex column; close button always visible regardless of content height
+- 🔧 **fix:** `touch-action: manipulation` on all buttons — eliminates 300ms tap delay and double-tap zoom sitewide
+- 🎨 **feat:** New modal CSS system (`.modal-overlay`, `.modal-card`, `.modal-header`, `.modal-body`, `.modal-footer`) — clean, reusable, mobile-first
 
 ### 🔖 v2.3.1 — 2026-03-22
 - 🚨 **fix:** CRITICAL — unclosed `<div>` in webhook modal broke entire DOM (set-PIN flow, dashboard unreachable)
