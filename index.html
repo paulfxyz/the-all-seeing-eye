@@ -1706,17 +1706,17 @@ document.addEventListener('keydown', function(e) {
 var BUILTIN = [
   { rank:1,  domain:'google.com',        cat:'search',  sslExpiry:'2026-05-18', ns:'Google',    mxType:'Google',     dmarc:'reject',     spf:'~all', custom:false },
   { rank:2,  domain:'youtube.com',       cat:'video',   sslExpiry:'2026-05-18', ns:'Google',    mxType:'Google',     dmarc:'reject',     spf:'~all', custom:false },
-  { rank:3,  domain:'facebook.com',      cat:'social',  sslExpiry:'2026-03-30', ns:'Own',       mxType:'Own',        dmarc:'reject',     spf:'~all', custom:false },
-  { rank:4,  domain:'instagram.com',     cat:'social',  sslExpiry:'2026-03-30', ns:'Own',       mxType:'Own',        dmarc:'reject',     spf:'~all', custom:false },
+  { rank:3,  domain:'facebook.com',      cat:'social',  sslExpiry:'2026-03-30', ns:'Domain',       mxType:'Own',        dmarc:'reject',     spf:'~all', custom:false },
+  { rank:4,  domain:'instagram.com',     cat:'social',  sslExpiry:'2026-03-30', ns:'Domain',       mxType:'Own',        dmarc:'reject',     spf:'~all', custom:false },
   { rank:5,  domain:'chatgpt.com',       cat:'ai',      sslExpiry:'2026-06-06', ns:'Cloudflare',mxType:'Google',     dmarc:'quarantine', spf:'~all', custom:false },
   { rank:6,  domain:'x.com',            cat:'social',  sslExpiry:'2026-05-02', ns:'Own',       mxType:'Google',     dmarc:'reject',     spf:'~all', custom:false },
   { rank:7,  domain:'reddit.com',        cat:'social',  sslExpiry:'2026-05-22', ns:'AWS',       mxType:'Google',     dmarc:'reject',     spf:'~all', custom:false },
   { rank:8,  domain:'wikipedia.org',     cat:'content', sslExpiry:'2026-05-07', ns:'Wikimedia', mxType:'Own',        dmarc:'reject',     spf:'~all', custom:false },
-  { rank:9,  domain:'whatsapp.com',      cat:'comm',    sslExpiry:'2026-03-30', ns:'Own',       mxType:'Own',        dmarc:'reject',     spf:'~all', custom:false },
+  { rank:9,  domain:'whatsapp.com',      cat:'comm',    sslExpiry:'2026-03-30', ns:'Domain',       mxType:'Own',        dmarc:'reject',     spf:'~all', custom:false },
   { rank:10, domain:'bing.com',          cat:'search',  sslExpiry:'2026-08-01', ns:'Azure',     mxType:'Microsoft',  dmarc:'reject',     spf:'~all', custom:false },
   { rank:11, domain:'tiktok.com',        cat:'video',   sslExpiry:'2026-06-15', ns:'Akamai',    mxType:'Google',     dmarc:'quarantine', spf:'~all', custom:false },
   { rank:12, domain:'amazon.com',        cat:'shop',    sslExpiry:'2027-01-23', ns:'Own',       mxType:'Amazon SES', dmarc:'reject',     spf:'~all', custom:false },
-  { rank:13, domain:'yahoo.com',         cat:'news',    sslExpiry:'2026-08-26', ns:'Own',       mxType:'Own',        dmarc:'reject',     spf:'~all', custom:false },
+  { rank:13, domain:'yahoo.com',         cat:'news',    sslExpiry:'2026-08-26', ns:'Domain',       mxType:'Own',        dmarc:'reject',     spf:'~all', custom:false },
   { rank:14, domain:'linkedin.com',      cat:'social',  sslExpiry:'2026-09-19', ns:'NS1',       mxType:'Microsoft',  dmarc:'reject',     spf:'~all', custom:false },
   { rank:15, domain:'netflix.com',       cat:'video',   sslExpiry:'2027-02-18', ns:'AWS',       mxType:'Google',     dmarc:'quarantine', spf:'~all', custom:false },
   { rank:16, domain:'duckduckgo.com',    cat:'search',  sslExpiry:'2026-12-20', ns:'NS1',       mxType:'Mimecast',   dmarc:'reject',     spf:'~all', custom:false },
@@ -1724,16 +1724,16 @@ var BUILTIN = [
   { rank:18, domain:'github.com',        cat:'dev',     sslExpiry:'2026-06-03', ns:'Own',       mxType:'Google',     dmarc:'reject',     spf:'~all', custom:false },
   { rank:19, domain:'discord.com',       cat:'comm',    sslExpiry:'2026-06-02', ns:'Cloudflare',mxType:'Google',     dmarc:'quarantine', spf:'~all', custom:false },
   { rank:20, domain:'microsoft.com',     cat:'product', sslExpiry:'2026-09-06', ns:'Azure',     mxType:'Microsoft',  dmarc:'reject',     spf:'~all', custom:false },
-  { rank:21, domain:'apple.com',         cat:'product', sslExpiry:'2026-05-27', ns:'Own',       mxType:'Own',        dmarc:'reject',     spf:'~all', custom:false },
+  { rank:21, domain:'apple.com',         cat:'product', sslExpiry:'2026-05-27', ns:'Domain',       mxType:'Own',        dmarc:'reject',     spf:'~all', custom:false },
   { rank:22, domain:'office.com',        cat:'product', sslExpiry:'2027-02-12', ns:'Azure',     mxType:'Microsoft',  dmarc:'reject',     spf:'~all', custom:false },
   { rank:23, domain:'temu.com',          cat:'shop',    sslExpiry:'2026-08-14', ns:'Azure',     mxType:'Google',     dmarc:'quarantine', spf:'~all', custom:false },
   { rank:24, domain:'canva.com',         cat:'product', sslExpiry:'2026-12-17', ns:'AWS',       mxType:'Google',     dmarc:'reject',     spf:'~all', custom:false },
   { rank:25, domain:'spotify.com',       cat:'content', sslExpiry:'2026-12-08', ns:'Google',    mxType:'Google',     dmarc:'reject',     spf:'~all', custom:false },
   { rank:26, domain:'openai.com',        cat:'ai',      sslExpiry:'2026-04-23', ns:'Azure',     mxType:'Google',     dmarc:'quarantine', spf:'~all', custom:false },
-  { rank:27, domain:'cloudflare.com',    cat:'cloud',   sslExpiry:'2026-06-10', ns:'Own',       mxType:'Google',     dmarc:'reject',     spf:'~all', custom:false },
+  { rank:27, domain:'cloudflare.com',    cat:'cloud',   sslExpiry:'2026-06-10', ns:'Domain',       mxType:'Google',     dmarc:'reject',     spf:'~all', custom:false },
   { rank:28, domain:'stackoverflow.com', cat:'dev',     sslExpiry:'2026-05-20', ns:'Cloudflare',mxType:'Google',     dmarc:'reject',     spf:'~all', custom:false },
   { rank:29, domain:'nytimes.com',       cat:'news',    sslExpiry:'2026-09-13', ns:'AWS',       mxType:'Google',     dmarc:'reject',     spf:'~all', custom:false },
-  { rank:30, domain:'pinterest.com',     cat:'social',  sslExpiry:'2026-08-23', ns:'Own',       mxType:'Own',        dmarc:'quarantine', spf:'~all', custom:false },
+  { rank:30, domain:'pinterest.com',     cat:'social',  sslExpiry:'2026-08-23', ns:'Domain',       mxType:'Own',        dmarc:'quarantine', spf:'~all', custom:false },
 ];
 
 
@@ -1920,7 +1920,12 @@ function renderTable() {
     var statusCls   = st.up === null ? '' : (st.up ? 'status-up' : 'status-down');
     var statusLabel = st.up === null ? '…' : (st.up ? 'UP' : 'DOWN');
     var latStr      = (st.latency !== null && st.latency !== undefined) ? st.latency + ' ms' : '—';
-    var sslStr      = days === null ? '—' : (days < 0 ? 'EXPIRED' : days + ' d');
+    /* SSL days string — null means not yet fetched (custom domain)
+     * Negative means cert has already expired */
+    var sslStr  = days === null ? '—' : (days < 0 ? 'EXPIRED' : days + ' d');
+    /* Let's Encrypt badge — shown when issuer is 'LE' */
+    var leBadge = (d.sslIssuer === 'LE')
+      ? '<span class="le-badge">LE</span>' : '';
     var dmarcLabel  = { reject:'✓ reject', quarantine:'~ quarantine', none:'~ none', missing:'✗ missing' }[d.dmarc] || '—';
     var spfCls      = d.spf === '~all' ? 'spf-soft' : (d.spf ? 'spf-pass' : 'spf-missing');
     var spfLabel    = d.spf ? '✓ ' + d.spf : '✗ missing';
@@ -1947,7 +1952,7 @@ function renderTable() {
         '<div class="sparkline">' + sparklineHTML(st.history) + '</div>' +
       '</div></td>' +
       '<td class="latency ' + latClass(st.latency) + '">' + latStr + '</td>' +
-      '<td><div class="ssl-cell"><span class="ssl-days ' + sslClass(days) + '">' + sslStr + '</span></div></td>' +
+      '<td><div class="ssl-cell"><span class="ssl-days ' + sslClass(days) + '">' + sslStr + '</span>' + leBadge + '</div></td>' +
       '<td class="info-cell"><div class="tooltip-host"><span class="info-badge ' + nsBadgeCls(d.ns) + '">'   + d.ns    + '</span>' + tooltipHTML(d.domain,'ns')    + '</div></td>' +
       '<td class="info-cell"><div class="tooltip-host"><span class="info-badge ' + mxBadgeCls(d.mxType) + '">'+ d.mxType+ '</span>' + tooltipHTML(d.domain,'mx')    + '</div></td>' +
       '<td class="info-cell"><div class="tooltip-host"><span class="info-badge dmarc-' + d.dmarc + '">'    + dmarcLabel+ '</span>' + tooltipHTML(d.domain,'dmarc')  + '</div></td>' +
@@ -2228,6 +2233,57 @@ function setRowLoading(domain, loading) {
  * @param {string} domain — bare domain name e.g. "paulfleury.com"
  * @param {boolean} fullScan — if true, also fetch NS/MX/TXT/DMARC
  */
+
+/**
+ * Fetch SSL certificate expiry for a domain via crt.sh.
+ *
+ * crt.sh is a certificate transparency log search service.
+ * We query for all valid certs for the domain, sort by expiry
+ * (newest first), and return the soonest-expiring valid cert.
+ *
+ * @param  {string} domain — bare domain name
+ * @returns {Promise<{expiry:string, issuer:string}|null>}
+ *          ISO date string + short issuer name, or null on failure
+ */
+async function fetchSSLExpiry(domain) {
+  try {
+    /* Use ?q=domain to get all certs including wildcards and SANs.
+     * exclude=expired avoids loading thousands of old records. */
+    var url = 'https://crt.sh/?q=' + encodeURIComponent(domain) + '&output=json&exclude=expired';
+    var res = await fetch(url, {
+      signal: AbortSignal.timeout(8000) /* generous timeout — crt.sh can be slow */
+    });
+    if (!res.ok) return null;
+    var certs = await res.json();
+    if (!Array.isArray(certs) || certs.length === 0) return null;
+
+    var now = new Date();
+
+    /* Filter to certs that are genuinely valid today, then sort
+     * by expiry descending so we pick the one expiring latest. */
+    var valid = certs
+      .filter(function(c) { return c.not_after && new Date(c.not_after) > now; })
+      .sort(function(a, b) { return new Date(b.not_after) - new Date(a.not_after); });
+
+    if (valid.length === 0) return null;
+
+    var best = valid[0];
+
+    /* Parse expiry — crt.sh returns ISO format: "2026-05-18T12:00:00" */
+    var expiry = best.not_after.split('T')[0]; /* keep YYYY-MM-DD only */
+
+    /* Detect issuer — Let's Encrypt uses CN starting with E5/E6/E7/R3/R10/R11 */
+    var cn = (best.issuer_name || '').replace(/.*CN=/, '').replace(/,.*/, '').trim();
+    var isLE = /^(R\d+|E\d+|Let'?s Encrypt)/i.test(cn);
+    var issuer = isLE ? 'LE' : (cn.length > 20 ? cn.slice(0, 20) : cn);
+
+    return { expiry: expiry, issuer: issuer };
+  } catch(e) {
+    /* Timeout or CORS error — fail silently */
+    return null;
+  }
+}
+
 async function checkDomain(domain, fullScan) {
   /* Ensure state entry exists */
   if (!domainState[domain]) {
@@ -2255,6 +2311,36 @@ async function checkDomain(domain, fullScan) {
     st.latency = null;
     st.history.push({ up: false, latency: null });
     if (st.history.length > 20) st.history.shift();
+  }
+
+  /* ── SSL expiry enrichment ──────────────────────────────────────────
+   * For custom domains (sslExpiry is null or unknown), we try to fetch
+   * the live SSL cert expiry from crt.sh certificate transparency logs.
+   *
+   * Why crt.sh:
+   *  - Free, no API key, CORS-enabled
+   *  - Returns all certs issued for a domain (Let's Encrypt, DigiCert, etc.)
+   *  - We filter to valid (not-yet-expired) certs and take the newest
+   *
+   * Why not block on it:
+   *  - crt.sh can be slow (1–3s) or occasionally timeout
+   *  - We fire it as a non-blocking background Promise alongside DNS checks
+   *  - If it resolves, we update the entry; if it times out, we keep '—'
+   *
+   * The built-in top-30 list has accurate seeded expiry dates from a
+   * real scan — we only enrich custom domains (sslExpiry === null).
+   * ──────────────────────────────────────────────────────────────── */
+  if (entry && (entry.sslExpiry === null || entry.sslExpiry === undefined)) {
+    /* Fire SSL check in background — don't await, let it update when ready */
+    fetchSSLExpiry(domain).then(function(result) {
+      if (result && entry) {
+        entry.sslExpiry = result.expiry;
+        entry.sslIssuer = result.issuer;
+        /* Re-render the single row once SSL data arrives */
+        renderTable();
+        updateStats();
+      }
+    });
   }
 
   /* ── Full DNS scan: NS, MX, TXT, DMARC (for custom or placeholder entries) ── */

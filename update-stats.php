@@ -229,6 +229,46 @@ function get_dmarc_record(array $txtRecords): string {
 }
 
 
+
+// ── SSL expiry helper ─────────────────────────────────────────
+/**
+ * Fetch SSL certificate expiry for a domain via real TLS connection.
+ * Uses stream_socket_client() — no curl, works on all shared hosts.
+ * Reads the peer certificate and extracts the notAfter date.
+ *
+ * @param  string $domain  bare domain name
+ * @param  int    $timeout seconds before giving up
+ * @return array|null  ['expiry'=>'YYYY-MM-DD', 'issuer'=>string] or null
+ */
+function get_ssl_expiry(string $domain, int $timeout = 5): ?array {
+    $context = stream_context_create(['ssl' => [
+        'capture_peer_cert' => true,
+        'verify_peer'       => false,
+        'verify_peer_name'  => false,
+        'SNI_enabled'       => true,
+        'peer_name'         => $domain,
+    ]]);
+    $stream = @stream_socket_client(
+        'ssl://' . $domain . ':443', $errno, $errstr, $timeout,
+        STREAM_CLIENT_CONNECT, $context
+    );
+    if (!$stream) return null;
+    $params = stream_context_get_params($stream);
+    fclose($stream);
+    $cert = $params['options']['ssl']['peer_certificate'] ?? null;
+    if (!$cert) return null;
+    $info = openssl_x509_parse($cert);
+    if (!$info) return null;
+    $ts = $info['validTo_time_t'] ?? null;
+    if (!$ts) return null;
+    $cn = $info['issuer']['CN'] ?? $info['issuer']['O'] ?? '?';
+    $isLE = stripos($cn, "let's encrypt") !== false || preg_match('/^[RE]\d+$/', $cn);
+    return [
+        'expiry' => date('Y-m-d', $ts),
+        'issuer' => $isLE ? 'LE' : substr($cn, 0, 25),
+    ];
+}
+
 // ── Step 3: Check each domain ──────────────────────────────────
 
 $results = [];
@@ -246,6 +286,22 @@ foreach ($domains as $rank => $domain) {
     $latencyMs = round((microtime(true) - $t0) * 1000);
     $status    = !empty($aRecords) ? 'UP' : 'DOWN';
     if ($status === 'UP') $onlineCount++;
+
+    // ── SSL certificate expiry ──
+    // Connect to port 443 and read the peer cert.
+    // Only run if domain is UP (avoids long timeouts on down domains).
+    $sslExpiry = '';
+    $sslIssuer = '';
+    if ($status === 'UP') {
+        $ssl = get_ssl_expiry($domain, 5);
+        if ($ssl) {
+            $sslExpiry = $ssl['expiry'];
+            $sslIssuer = $ssl['issuer'];
+            // Calculate days until expiry
+            $sslDays   = (int) round((strtotime($sslExpiry) - time()) / 86400);
+            if ($sslDays < 30) $alertCount++; // override DNS-based alert count
+        }
+    }
 
     // ── NS records ──
     $nsRecords  = dns_query($domain, DNS_NS);
@@ -286,7 +342,7 @@ foreach ($domains as $rank => $domain) {
         'timestamp'  => $timestamp,
     ];
 
-    log_line("       → $status | {$latencyMs}ms | NS=$nsProvider | MX=$mxProvider | DMARC=$dmarc | SPF=" . ($spf ?: '—'));
+    log_line("       → $status | {$latencyMs}ms | SSL=" . ($sslExpiry ?: '—') . " ($sslIssuer) | NS=$nsProvider | MX=$mxProvider | DMARC=$dmarc | SPF=" . ($spf ?: '—'));
 }
 
 log_line('');
@@ -301,6 +357,7 @@ log_line('');
  * so the file can be opened in Excel / Google Sheets directly.
  */
 $csvHeaders = ['Timestamp','Rank','Domain','Status','Latency (ms)',
+               'SSL Expiry','SSL Issuer',
                'NS Provider','NS Records','MX Provider','MX Records',
                'DMARC','DMARC Record','SPF','SPF Record'];
 
