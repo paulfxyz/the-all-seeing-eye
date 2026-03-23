@@ -341,15 +341,19 @@ HTML;
 function buildDigestEmail(array $issues, int $totalDomains, int $domainsDown): string {
     $timeStr      = date('D d M Y, H:i:s T');
     $issueCount   = count($issues);
-    $criticals    = array_filter($issues, fn($i) => $i['severity'] === 'critical');
-    $warnings     = array_filter($issues, fn($i) => $i['severity'] === 'warning');
-    $headerColor  = count($criticals) > 0 ? '#ef4444' : '#f59e0b';
-    $headerIcon   = count($criticals) > 0 ? '🚨' : '⚠️';
-    $headerTitle  = count($criticals) > 0
-        ? "Downtime / Critical Alert — {$issueCount} issue" . ($issueCount !== 1 ? 's' : '') . " detected"
-        : "Health Warning — {$issueCount} issue" . ($issueCount !== 1 ? 's' : '') . " detected";
+    $criticals    = array_filter($issues, function($i) { return $i['severity'] === 'critical'; });
+    $warnings     = array_filter($issues, function($i) { return $i['severity'] === 'warning'; });
+    $critCount    = count($criticals);
+    $warnCount    = count($warnings);
+    $headerColor  = $critCount > 0 ? '#ef4444' : '#f59e0b';
+    $headerIcon   = $critCount > 0 ? '🚨' : '⚠️';
+    $issueWord    = $issueCount !== 1 ? 'issues' : 'issue';
+    $headerTitle  = $critCount > 0
+        ? "Downtime / Critical Alert — {$issueCount} {$issueWord} detected"
+        : "Health Warning — {$issueCount} {$issueWord} detected";
 
-    /* Build issue rows */
+    /* Build issue rows — pre-resolve all values before heredoc to avoid
+     * PHP heredoc interpolation limitations (no function calls inside {}) */
     $rowsHtml = '';
     $allIssues = array_merge(array_values($criticals), array_values($warnings));
     foreach ($allIssues as $issue) {
@@ -359,17 +363,19 @@ function buildDigestEmail(array $issues, int $totalDomains, int $domainsDown): s
         $labelColor  = $isCritical ? '#dc2626' : '#d97706';
         $icon        = $isCritical ? '🚨' : '⚠️';
 
-        $domain      = h($issue['domain'] ?? '');
-        $label       = h($issue['label']  ?? '');
-        $detail      = h($issue['detail'] ?? '');
+        /* Pre-resolve all display values — no expressions inside heredoc */
+        $domainStr   = h($issue['domain'] ?? '');
+        $labelStr    = h($issue['label']  ?? '');
+        $detailStr   = h($issue['detail'] ?? '');
         $sslExpiry   = $issue['ssl_expiry'] ?? null;
         $sslDays     = $issue['ssl_days']   ?? null;
         $dmarc       = $issue['dmarc']      ?? null;
-        $spf         = $issue['spf']        ?? null;
-        $ns          = $issue['ns']         ?? null;
-        $mx          = $issue['mx']         ?? null;
+        $spfVal      = $issue['spf']        ?? null;
+        $nsVal       = $issue['ns']         ?? null;
+        $mxVal       = $issue['mx']         ?? null;
         $latency     = $issue['latency']    ?? null;
 
+        /* SSL */
         $sslStr  = $sslExpiry ? h($sslExpiry) . ($sslDays !== null ? " ({$sslDays}d)" : '') : '—';
         $sslCol  = '#374151';
         if ($sslDays !== null) {
@@ -377,23 +383,27 @@ function buildDigestEmail(array $issues, int $totalDomains, int $domainsDown): s
             elseif ($sslDays <= 30)  $sslCol = '#d97706';
             else                     $sslCol = '#059669';
         }
+
+        /* DMARC */
         $dmarcStr = $dmarc ? h(ucfirst($dmarc)) : '—';
         $dmarcCol = '#374151';
-        if ($dmarc === 'reject')              $dmarcCol = '#059669';
-        elseif ($dmarc === 'quarantine')      $dmarcCol = '#d97706';
-        elseif ($dmarc === 'none' || $dmarc === 'missing') $dmarcCol = '#dc2626';
+        if ($dmarc === 'reject')                              $dmarcCol = '#059669';
+        elseif ($dmarc === 'quarantine')                      $dmarcCol = '#d97706';
+        elseif ($dmarc === 'none' || $dmarc === 'missing')    $dmarcCol = '#dc2626';
 
+        /* SPF, NS, MX — pre-resolved to avoid ternaries inside heredoc */
+        $spfStr  = $spfVal  ? h($spfVal)  : '<span style="color:#dc2626">missing</span>';
+        $nsStr   = $nsVal   ? h($nsVal)   : '—';
+        $mxStr   = $mxVal   ? h($mxVal)   : '—';
         $latStr  = $latency !== null ? "{$latency}ms" : '—';
 
         $rowsHtml .= <<<ROW
         <div style="background:{$rowBg};border:1px solid {$rowBorder};border-radius:10px;padding:16px 18px;margin-bottom:12px">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
-            <div>
-              <span style="font-size:16px;font-weight:800;color:#111">{$icon} {$domain}</span>
-              <span style="margin-left:10px;display:inline-block;background:{$labelColor};color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase">{$label}</span>
-            </div>
+          <div style="margin-bottom:10px">
+            <span style="font-size:16px;font-weight:800;color:#111">{$icon} {$domainStr}</span>
+            <span style="margin-left:10px;display:inline-block;background:{$labelColor};color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase">{$labelStr}</span>
           </div>
-          <p style="margin:0 0 10px;font-size:13px;color:#374151">{$detail}</p>
+          <p style="margin:0 0 10px;font-size:13px;color:#374151">{$detailStr}</p>
           <table style="width:100%;border-collapse:collapse;font-size:12px">
             <tr>
               <td style="padding:3px 8px 3px 0;color:#6b7280;width:90px">Latency</td>
@@ -405,27 +415,27 @@ function buildDigestEmail(array $issues, int $totalDomains, int $domainsDown): s
               <td style="padding:3px 8px 3px 0;color:#6b7280">DMARC</td>
               <td style="padding:3px 0;font-weight:600;color:{$dmarcCol}">{$dmarcStr}</td>
               <td style="padding:3px 8px 3px 16px;color:#6b7280">SPF</td>
-              <td style="padding:3px 0;color:#374151">{$spf ? h($spf) : '<span style="color:#dc2626">missing</span>'}</td>
+              <td style="padding:3px 0;color:#374151">{$spfStr}</td>
             </tr>
             <tr>
               <td style="padding:3px 8px 3px 0;color:#6b7280">NS</td>
-              <td style="padding:3px 0;color:#374151">{$ns ? h($ns) : '—'}</td>
+              <td style="padding:3px 0;color:#374151">{$nsStr}</td>
               <td style="padding:3px 8px 3px 16px;color:#6b7280">MX</td>
-              <td style="padding:3px 0;color:#374151">{$mx ? h($mx) : '—'}</td>
+              <td style="padding:3px 0;color:#374151">{$mxStr}</td>
             </tr>
           </table>
         </div>
 ROW;
     }
 
-    /* Summary line */
+    /* Summary line — pre-built string (no inline quotes that could break parsing) */
     $summaryParts = [];
-    if ($domainsDown > 0) $summaryParts[] = "<strong style="color:#ef4444">{$domainsDown} DOWN</strong>";
-    $critCount = count($criticals);
-    $warnCount = count($warnings);
-    if ($critCount > 0) $summaryParts[] = "{$critCount} critical";
-    if ($warnCount > 0) $summaryParts[] = "{$warnCount} warning" . ($warnCount !== 1 ? 's' : '');
-    $summary = implode(' · ', $summaryParts);
+    if ($domainsDown > 0) {
+        $summaryParts[] = '<strong style="color:#ef4444">' . $domainsDown . ' DOWN</strong>';
+    }
+    if ($critCount > 0) $summaryParts[] = $critCount . ' critical';
+    if ($warnCount > 0) $summaryParts[] = $warnCount . ' warning' . ($warnCount !== 1 ? 's' : '');
+    $summary = implode(' &middot; ', $summaryParts);
 
     return <<<HTML
 <!DOCTYPE html>
@@ -563,7 +573,7 @@ if ($action === 'digest') {
     }
 
     /* Count critical issues for subject line */
-    $critCount = count(array_filter($issues, fn($i) => ($i['severity'] ?? '') === 'critical'));
+    $critCount = count(array_filter($issues, function($i) { return isset($i['severity']) ? $i['severity'] === 'critical' : false; }));
     $warnCount = count($issues) - $critCount;
     $subject   = $critCount > 0
         ? "🚨 {$critCount} critical alert" . ($critCount !== 1 ? 's' : '') . " — The All Seeing Eye"

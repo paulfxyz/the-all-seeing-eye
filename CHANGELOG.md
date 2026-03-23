@@ -10,6 +10,48 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## 🔖 [3.3.1] — 2026-03-23
+
+### 🐛 Critical Fix — PHP Fatal Errors in notify.php
+
+---
+
+#### Root cause: Three PHP parse/runtime errors
+
+**Error 1 — Arrow functions () require PHP 7.4+**
+notify.php used  in three places inside . SiteGround's effective PHP version for this file was below 7.4, causing a fatal parse error before any output — producing the blank 500 response that the browser JS received as "Unexpected end of JSON input".
+
+Fix: replaced all three  arrow functions with compatible anonymous functions:
+
+→ 
+
+**Error 2 — Function calls inside heredoc interpolation**
+PHP heredoc syntax () allows simple variable interpolation  but NOT complex expressions like . These cause a parse error.
+
+The three offending lines were the SPF, NS, and MX cells:
+
+
+All three variables (, , ) are now pre-resolved before the heredoc block.
+
+**Error 3 — Inline escaped quotes inside a double-quoted string**
+The summary  line used  — escaped double quotes inside a double-quoted string, which terminated the string early.
+
+Fix: rebuilt the summary string using concatenation with single quotes.
+
+---
+
+#### Lesson learned
+Heredoc interpolation in PHP only supports  — NOT  or . Always pre-resolve complex expressions into simple variables before a heredoc block. This is easy to miss in PHP because the parser accepts it without syntax highlighting errors in most editors.
+
+### 🐛 Fixed
+
+-  — 3×  arrow functions → 
+-  — SPF/NS/MX cells: pre-resolve , ,  before heredoc
+-  — Summary line: rebuild with concatenation, no escaped quotes
+-  — same arrow function fix (, ) for future PHP compatibility
+
+---
+
 ## 🔖 [3.3.0] — 2026-03-23
 
 ### 🔔 Complete Notification Coverage — Cron + Browser · Digest Format · Deduplication

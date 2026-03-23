@@ -91,7 +91,7 @@ if (!file_exists(DOMAINS_LIST)) {
 $rawLines = file(DOMAINS_LIST, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 $domains  = array_values(array_filter(
     array_map('trim', $rawLines),
-    fn($line) => $line !== '' && $line[0] !== '#'  // skip comments
+    function(\$line) { return \$line !== '' && \$line[0] !== '#'; }  // skip comments
 ));
 
 if (empty($domains)) {
@@ -595,7 +595,7 @@ function cron_mark_sent(string $domain, string $type, array &$sent): void {
     // POST to notify.php (same-server call using file path, not HTTP)
     // We include notify.php directly to avoid HTTP overhead and auth issues
     $totalDomains = count($results);
-    $domainsDown  = count(array_filter($results, fn($r) => $r['status'] === 'DOWN'));
+    $domainsDown  = count(array_filter(\$results, function(\$r) { return \$r['status'] === 'DOWN'; }));
 
     // Use HTTP to notify.php (self-request) — keeps the logic in one place
     // and avoids duplicating the Resend/encryption logic here
