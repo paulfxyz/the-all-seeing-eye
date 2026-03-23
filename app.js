@@ -161,6 +161,9 @@ async function loadConfig() {
 
       /* Apply notification config */
       applyNotifyConfig(cfg);
+
+      /* Restore notification send timestamps (cooldown persistence) */
+      _notifyLoadState(cfg);
     }
   } catch(e) {
     /* config-write.php unavailable (static host, permissions) — silently continue */
@@ -869,6 +872,7 @@ function toggleFilter(type) {
      rather than all-at-once to avoid burst flooding.
    ──────────────────────────────────────────────────────────────── */
 var _checkRunning   = false;   /* true while a full checkAll() is in progress */
+var _manualRefresh  = false;   /* true when user clicked Refresh (vs auto-refresh) */
 var _lastCheckAll   = 0;       /* timestamp of last full run */
 var _domainLastCheck = {};     /* timestamp of last per-domain check */
 var CHECK_ALL_MIN_GAP  = 5000;   /* 5s minimum between full refreshes */  /* ms — minimum gap between full refreshes */
@@ -1415,17 +1419,22 @@ async function checkAll() {
       if (updated) { renderTable(); updateStats(); }
 
       /* After SSL data is merged, run the full health report scan.
-       * This is the right moment — both DNS and SSL data are now complete.
-       * sendHealthReport() checks cooldowns so it won't flood on every refresh. */
-      sendHealthReport();
+       * Pass isManual flag so manual refreshes use shorter cooldowns. */
+      var wasManual = _manualRefresh;
+      _manualRefresh = false;
+      sendHealthReport(wasManual);
     });
   }
 
-  /* If all SSL data was already known (no needSSL), run health check now.
-   * If needSSL was non-empty, sendHealthReport() runs inside the .then() above
-   * after SSL data merges — no double-firing since cooldowns prevent that. */
+  /* If all SSL data was already known, run health check now.
+   * Pass isManual flag so manual refreshes use shorter cooldowns. */
   if (needSSL.length === 0) {
-    sendHealthReport();
+    var wasManual2 = _manualRefresh;
+    _manualRefresh = false;
+    sendHealthReport(wasManual2);
+  } else {
+    /* Reset flag here too — sendHealthReport inside .then() captured it already */
+    _manualRefresh = false;
   }
 
   saveDomainsStats();
@@ -1483,6 +1492,7 @@ function triggerRefresh() {
     var pf = document.getElementById('progress-fill');
     if (pf) pf.style.width = '100%';
     setRefreshBtnLoading();
+    _manualRefresh = true;
     checkAll().then(setRefreshBtnNormal);
     return;
   }
@@ -1510,6 +1520,7 @@ function triggerRefresh() {
         var pf = document.getElementById('progress-fill');
         if (pf) pf.style.width = '100%';
         setRefreshBtnLoading();
+        _manualRefresh = true;
         checkAll().then(setRefreshBtnNormal);
       }
     }, 1000);
@@ -2658,16 +2669,51 @@ document.addEventListener('keydown', function(e) {
 /* Tracks last notification timestamp per domain+type.
    Key format: "domain:type" e.g. "example.com:ssl_expiry"
    Prevents re-sending the same alert every 3 minutes. */
+/**
+ * _notifyLastSent — tracks when each domain+type alert was last sent.
+ * Key: "domain:type"  Value: Unix timestamp (ms)
+ *
+ * Persistence: saved to ase_config.json via saveConfig() after each scan,
+ * loaded by loadConfig() on startup. This means cooldowns survive page
+ * reloads AND work correctly across browser sessions on the same server.
+ *
+ * Why not a cookie?  The data can be large (50 domains × 5 types = 250 keys).
+ * ase_config.json has no size limit. Cookies are capped at 4KB.
+ */
 var _notifyLastSent = {};
 
-/* Cooldown periods (ms) for each alert type */
-var NOTIFY_COOLDOWN = {
-  ssl_expiry:      86400000,  /* 24h — SSL expiry won't change minute-to-minute */
+/**
+ * Cooldown periods (ms) for each alert type.
+ *
+ * Two modes:
+ *   AUTO  — auto-refresh every 3 minutes. Use long cooldowns to prevent spam.
+ *   MANUAL — user explicitly clicked Refresh. Use short cooldown (5 min) so
+ *            they get confirmation that the system is working.
+ *
+ * Design rationale:
+ *   A user who clicks Refresh wants to know the current state NOW.
+ *   If their SSL is expiring, they should see an email immediately on demand.
+ *   Auto-refresh running every 3 minutes should NOT generate 480 emails/day.
+ */
+var NOTIFY_COOLDOWN_AUTO = {
+  ssl_expiry:      86400000,  /* 24h — health issues checked once/day is enough */
   dmarc_missing:   86400000,  /* 24h */
   dmarc_none:      86400000,  /* 24h */
   spf_missing:     86400000,  /* 24h */
-  down:            3600000,   /* 1h  — repeated downtime reminders if still down */
+  down:            3600000,   /* 1h  — repeated downtime reminders every hour */
 };
+
+var NOTIFY_COOLDOWN_MANUAL = {
+  ssl_expiry:      300000,   /* 5 min — manual refresh gives fresh report */
+  dmarc_missing:   300000,   /* 5 min */
+  dmarc_none:      300000,   /* 5 min */
+  spf_missing:     300000,   /* 5 min */
+  down:            60000,    /* 1 min — if still down, confirm immediately */
+};
+
+/* Active cooldown map — set to MANUAL when user clicks Refresh,
+ * AUTO for auto-refresh cycles. Reset after each sendHealthReport() call. */
+var _activeCooldown = NOTIFY_COOLDOWN_AUTO;
 
 /**
  * Check if a notification for domain+type is past its cooldown.
@@ -2676,9 +2722,9 @@ var NOTIFY_COOLDOWN = {
  * @returns {boolean}  true = allowed to send
  */
 function _notifyCooldownOk(domain, type) {
-  var key = domain + ':' + type;
-  var last = _notifyLastSent[key] || 0;
-  var cooldown = NOTIFY_COOLDOWN[type] || 86400000;
+  var key      = domain + ':' + type;
+  var last     = _notifyLastSent[key] || 0;
+  var cooldown = _activeCooldown[type] || 86400000;
   return (Date.now() - last) >= cooldown;
 }
 
@@ -2703,8 +2749,18 @@ function _notifyMarkSent(domain, type) {
  *
  * @param {boolean} [force=false]  If true, bypass cooldown (used for test)
  */
-async function sendHealthReport(force) {
+/**
+ * @param {boolean} [isManual=false]  True = user clicked Refresh.
+ *   Uses shorter cooldowns so manual checks always get a fresh report.
+ * @param {boolean} [force=false]     True = bypass all cooldowns (test only).
+ */
+async function sendHealthReport(isManual, force) {
   if (!_notifyConfig.enabled || !_notifyConfig.hasKey) return;
+
+  /* Switch cooldown table based on how the check was triggered */
+  _activeCooldown = (force) ? { ssl_expiry:0, dmarc_missing:0, dmarc_none:0, spf_missing:0, down:0 }
+                 : (isManual) ? NOTIFY_COOLDOWN_MANUAL
+                 : NOTIFY_COOLDOWN_AUTO;
 
   var issues = [];  /* array of issue objects to include in the digest */
 
@@ -2812,7 +2868,15 @@ async function sendHealthReport(force) {
     }
   });
 
-  if (issues.length === 0) return;  /* all clear — no email */
+  /* Always reset to auto cooldown for next cycle */
+  _activeCooldown = NOTIFY_COOLDOWN_AUTO;
+
+  if (issues.length === 0) {
+    /* All clear — persist the updated last-sent timestamps so cooldowns
+     * survive a page reload even when there's nothing to report */
+    _notifySaveState();
+    return;
+  }
 
   /* Send single digest covering all issues */
   try {
@@ -2820,18 +2884,42 @@ async function sendHealthReport(force) {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({
-        action: 'digest',
-        issues: issues,
-        total_domains:  DOMAINS.length,
-        domains_down:   DOMAINS.filter(function(d) { return (domainState[d.domain]||{}).up === false; }).length
+        action:        'digest',
+        issues:        issues,
+        total_domains: DOMAINS.length,
+        domains_down:  DOMAINS.filter(function(d) { return (domainState[d.domain]||{}).up === false; }).length
       })
     });
     var json = await res.json();
     if (json && json.ok) {
       console.log('[Eye] Health digest sent (' + issues.length + ' issue(s))');
+      /* Persist updated send timestamps to survive page reload */
+      _notifySaveState();
     }
   } catch(e) {
     /* Silent — notifications are best-effort */
+  }
+}
+
+/**
+ * Save _notifyLastSent to ase_config.json so cooldowns persist across
+ * page reloads and browser sessions on the same server.
+ * Fire-and-forget — never blocks the UI.
+ */
+function _notifySaveState() {
+  if (Object.keys(_notifyLastSent).length === 0) return;
+  saveConfig({ notify_last_sent: _notifyLastSent }).catch(function(){});
+}
+
+/**
+ * Load _notifyLastSent from server config.
+ * Called by loadConfig() — already runs at startup before PIN is shown.
+ * @param {Object} cfg  The full config object from ase_config.json
+ */
+function _notifyLoadState(cfg) {
+  if (cfg && cfg.notify_last_sent && typeof cfg.notify_last_sent === 'object') {
+    _notifyLastSent = cfg.notify_last_sent;
+    console.log('[Eye] Notification state loaded (' + Object.keys(_notifyLastSent).length + ' entries)');
   }
 }
 

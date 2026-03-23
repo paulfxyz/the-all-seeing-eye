@@ -6,7 +6,7 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-3.3.1-brightgreen?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.0.0-brightgreen?style=for-the-badge)
 ![Self-hosted](https://img.shields.io/badge/self--hosted-no_server_needed-blue?style=for-the-badge)
 
 **Open-source uptime, DNS, SSL and latency monitor. One HTML file. Zero dependencies.**
@@ -50,7 +50,7 @@ A **self-hosted infrastructure dashboard** that monitors uptime, DNS records, SS
 - 🔐 **PIN-protected** dashboard (SHA-256 hashed — no plaintext stored)
 - 🌓 **Light / Dark mode** toggle (light by default)
 - 📱 **Mobile-first** — native numeric keyboard on touch devices, touch-optimised modals
-- 🔔 **Email alerts** — digest email on downtime, SSL expiry, DMARC/SPF issues; fires from browser checks AND server cron; deduplication built-in
+- 🔔 **Email alerts** — digest email on downtime, SSL expiry, DMARC/SPF issues; manual Refresh = immediate alert; auto-refresh = 24h cooldown; state persists across reloads
 - 📊 **Cross-device uptime** — server-side `uptime.json` shared across all browsers and devices
 - ⚡ **Progressive scan** — rows light up one batch at a time as results arrive
 - 🔄 **Per-row refresh** — re-scan any single domain with the ↺ button
@@ -333,6 +333,13 @@ The skeleton-first approach is intentional: users see their domains listed insta
 ## 📝 Changelog
 
 > Full changelog: **[CHANGELOG.md](./CHANGELOG.md)**
+
+### 🔖 v4.0.0 — 2026-03-23
+- 🔔 **feat:** Manual Refresh triggers immediate notification (5-min cooldown vs 24h for auto-refresh)
+- 💾 **feat:** Notification state persists across page reloads via `ase_config.json`
+- 🏗️ **feat:** Dual cooldown system: `NOTIFY_COOLDOWN_MANUAL` (5min) vs `NOTIFY_COOLDOWN_AUTO` (24h)
+- 🔐 **feat:** `_notifyLoadState()` / `_notifySaveState()` — server-backed cooldown persistence
+- ⚙️ **feat:** `config-write.php` extended with `notify_last_sent` field
 
 ### 🔖 v3.3.1 — 2026-03-23
 - 🐛 **fix:** PHP fatal error in notify.php — arrow functions, heredoc ternaries, escaped quotes causing HTTP 500

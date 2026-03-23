@@ -12,11 +12,12 @@
  *   "pin_hash":        "sha256_hex_string",   // 64 hex chars
  *   "theme":           "light" | "dark",      // default theme preference
  *   "custom_domains":  ["dom1.com", ...],     // domains added via UI
- *   "notify_enabled":   true | false,            // email notifications on/off
+ *   "notify_enabled":     true | false,           // email notifications on/off
  *   "notify_from":      "from@example.com",       // sender email (Resend verified)
  *   "notify_to":        "to@example.com",         // recipient email
  *   "notify_api_key_enc": "base64...",            // AES-256-GCM encrypted Resend key
- *   "updated_at":      "ISO 8601 timestamp"
+ *   "notify_last_sent":  {"domain:type": timestamp_ms, ...}, // cooldown persistence
+ *   "updated_at":       "ISO 8601 timestamp"
  * }
  *
  * Endpoints:
@@ -233,6 +234,28 @@ if ($method === 'POST') {
     /* Allow clearing the API key */
     if (isset($posted['notify_api_key_clear']) && $posted['notify_api_key_clear'] === true) {
         unset($config['notify_api_key_enc']);
+        $changed = true;
+    }
+
+    /* ── Notification send timestamps (cooldown persistence) ── */
+    if (isset($posted['notify_last_sent'])) {
+        if (!is_array($posted['notify_last_sent'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'notify_last_sent must be an object']);
+            exit;
+        }
+        /* Validate: keys must be "domain:type" strings, values must be integers */
+        $validTypes  = ['down', 'ssl_expiry', 'ssl_critical', 'dmarc_missing', 'dmarc_none', 'spf_missing'];
+        $cleanSent   = [];
+        foreach ($posted['notify_last_sent'] as $key => $ts) {
+            if (!is_string($key) || !is_numeric($ts)) continue;
+            $parts = explode(':', $key, 2);
+            if (count($parts) !== 2) continue;
+            $type = $parts[1];
+            if (!in_array($type, $validTypes, true)) continue;
+            $cleanSent[$key] = intval($ts);
+        }
+        $config['notify_last_sent'] = $cleanSent;
         $changed = true;
     }
 

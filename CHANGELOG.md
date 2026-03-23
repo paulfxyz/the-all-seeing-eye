@@ -10,6 +10,124 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## 🔖 [4.0.0] — 2026-03-23
+
+### 🚀 Stable Release — Notification Persistence · Smart Cooldowns · Full Production-Ready
+
+---
+
+#### The problem with v3.3.x notifications
+
+**"I hit Refresh and didn't get an email."**
+
+Root cause: `_notifyLastSent` was an in-memory JavaScript object initialised to `{}` on every page load. The first check fires an alert and marks `_notifyLastSent["domain:ssl_expiry"] = Date.now()`. The 24h cooldown means no more emails until tomorrow — correct for auto-refresh, terrible for manual interaction.
+
+Two sub-problems:
+1. **No distinction between manual and automatic checks.** A user clicking Refresh explicitly wants to know the current health state. They should get an email. An auto-refresh running every 3 minutes should not.
+2. **State lost on page reload.** `_notifyLastSent` reset to `{}` on every page load — so the first check on a fresh session always fired an email, even if one was sent 30 seconds ago by the previous session.
+
+---
+
+#### Fix: Dual cooldown system
+
+Two cooldown tables replace the single `NOTIFY_COOLDOWN`:
+
+```
+NOTIFY_COOLDOWN_AUTO (default, for 3-min auto-refresh):
+  ssl_expiry:    86400000  (24 hours)
+  dmarc_missing: 86400000  (24 hours)
+  dmarc_none:    86400000  (24 hours)
+  spf_missing:   86400000  (24 hours)
+  down:           3600000  (1 hour — repeated reminders if still down)
+
+NOTIFY_COOLDOWN_MANUAL (when user clicks Refresh):
+  ssl_expiry:     300000   (5 minutes)
+  dmarc_missing:  300000   (5 minutes)
+  dmarc_none:     300000   (5 minutes)
+  spf_missing:    300000   (5 minutes)
+  down:            60000   (1 minute)
+```
+
+`_activeCooldown` is set to `NOTIFY_COOLDOWN_MANUAL` when `triggerRefresh()` sets `_manualRefresh = true` before calling `checkAll()`. After `sendHealthReport()` runs, `_activeCooldown` is reset to `NOTIFY_COOLDOWN_AUTO`.
+
+`force: true` (test email) bypasses all cooldowns entirely by setting all values to 0.
+
+---
+
+#### Fix: Notification state persistence
+
+`_notifyLastSent` is now saved to `ase_config.json` after every successful digest send (and after all-clear scans) via `_notifySaveState()` → `saveConfig({ notify_last_sent: {...} })`. On startup, `loadConfig()` calls `_notifyLoadState(cfg)` to restore the map.
+
+This means:
+- Page reload does NOT reset cooldowns — the 24h window persists correctly
+- Multiple browser tabs share the same state (via server config)
+- A cron-sent notification counts toward the browser's cooldown (and vice versa — though the cron uses its own `cron_notify_sent.json` tracker)
+
+`config-write.php` validates `notify_last_sent`: keys must be `"domain:type"` format with a valid type name; values must be integers (Unix ms timestamps).
+
+---
+
+#### `_manualRefresh` flag flow
+
+```
+triggerRefresh()
+  ├── _manualRefresh = true
+  └── checkAll()
+        ├── DNS checks (batched)
+        ├── fetchAllSSLExpiry()
+        │     └── .then() {
+        │           var wasManual = _manualRefresh
+        │           _manualRefresh = false          ← reset before next cycle
+        │           sendHealthReport(wasManual)     ← uses MANUAL cooldowns
+        │         }
+        └── if needSSL.length === 0 {
+              var wasManual = _manualRefresh
+              _manualRefresh = false
+              sendHealthReport(wasManual)
+            }
+
+Auto-refresh (setInterval / initDashboard):
+  └── checkAll()  [_manualRefresh = false by default]
+        └── sendHealthReport(false)  ← uses AUTO cooldowns
+```
+
+---
+
+#### Why v4.0.0?
+
+This release brings the notification system to a state where it behaves intuitively in all scenarios:
+- ✅ Manual Refresh → email (5-min cooldown, user-controlled)
+- ✅ Auto-refresh → no email spam (24h cooldown, silent)
+- ✅ Cron check → email (file-backed cooldown, 24h)
+- ✅ Page reload → cooldowns respected (server-persisted state)
+- ✅ Test button → always fires (bypasses all cooldowns)
+- ✅ All-clear → no email, but state saved
+- ✅ DOWN domain → immediate email, hourly reminder
+- ✅ Recovery → immediate email
+
+Combined with v3.x features (mobile-first, server-side uptime, config persistence, enriched email digest), this represents a complete, production-ready monitoring dashboard.
+
+### ✨ Added
+
+- **`NOTIFY_COOLDOWN_AUTO`** — auto-refresh cooldowns (24h health, 1h down)
+- **`NOTIFY_COOLDOWN_MANUAL`** — manual refresh cooldowns (5min health, 1min down)
+- **`_activeCooldown`** — active cooldown map, switched per check type
+- **`_manualRefresh`** — global flag set by `triggerRefresh()`, consumed by `checkAll()`
+- **`_notifySaveState()`** — fire-and-forget save to `ase_config.json`
+- **`_notifyLoadState(cfg)`** — restore `_notifyLastSent` from server config
+- **`config-write.php`** — `notify_last_sent` field with key/type validation
+
+### 🔄 Changed
+
+- `app.js` — `sendHealthReport(isManual, force)` — new signature with dual mode
+- `app.js` — `_notifyCooldownOk()` — uses `_activeCooldown` instead of hardcoded table
+- `app.js` — `triggerRefresh()` — sets `_manualRefresh = true` before `checkAll()`
+- `app.js` — `checkAll()` — captures `_manualRefresh`, resets it, passes to `sendHealthReport()`
+- `app.js` — `loadConfig()` — calls `_notifyLoadState(cfg)` after config fetch
+- `app.js` — `sendHealthReport()` — saves state after send and on all-clear
+
+---
+
 ## 🔖 [3.3.1] — 2026-03-23
 
 ### 🐛 Critical Fix — PHP Fatal Errors in notify.php
