@@ -6,7 +6,7 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-4.0.0-brightgreen?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.1.0-brightgreen?style=for-the-badge)
 ![Self-hosted](https://img.shields.io/badge/self--hosted-no_server_needed-blue?style=for-the-badge)
 
 **Open-source uptime, DNS, SSL and latency monitor. One HTML file. Zero dependencies.**
@@ -333,6 +333,14 @@ The skeleton-first approach is intentional: users see their domains listed insta
 ## 📝 Changelog
 
 > Full changelog: **[CHANGELOG.md](./CHANGELOG.md)**
+
+### 🔖 v4.1.0 — 2026-03-25
+- 📱 **fix:** Mobile PIN — duplicate dots eliminated; native input is the sole indicator on touch devices
+- 📱 **fix:** Mobile PIN auto-focus on page load (fixed broken MutationObserver approach)
+- 📱 **fix:** PIN input centred correctly on mobile (width:100%, max-width:280px, margin:auto)
+- 📱 **fix:** Change PIN modal — native keyboard input + auto-focus on each phase
+- 🏗️ **feat:** `_isTouchDevice` global flag; `_focusMobilePin()` reusable helper
+- 🏗️ **feat:** `cpMobileInput()` handler and `_cpClearMobileInput()` for Change PIN mobile flow
 
 ### 🔖 v4.0.0 — 2026-03-23
 - 🔔 **feat:** Manual Refresh triggers immediate notification (5-min cooldown vs 24h for auto-refresh)

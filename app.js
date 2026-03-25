@@ -2144,6 +2144,27 @@ var CP_SUBS = {
 };
 
 function openChangePinModal() {
+  /* Activate mobile input mode (hides numpad + dots, shows native keyboard input) */
+  if (_isTouchDevice) {
+    var cpCard  = document.getElementById('cp-card');
+    var cpInput = document.getElementById('cp-mobile-input');
+    var cpDots  = document.getElementById('cp-dots');
+    var cpGrid  = document.getElementById('cp-grid');
+
+    if (cpCard)  cpCard.classList.add('mobile-pin-active');
+    if (cpInput) {
+      cpInput.style.display = 'block';
+      cpInput.value = '';
+      cpInput.classList.remove('error');
+    }
+    /* Dots and grid are hidden via CSS .mobile-pin-active rules,
+     * but also hide explicitly for safety */
+    if (cpDots) cpDots.style.display = 'none';
+    if (cpGrid) cpGrid.style.display = 'none';
+
+    /* Focus after animation completes (card-in is 250ms) */
+    setTimeout(function() { try { cpInput && cpInput.focus(); } catch(e) {} }, 300);
+  }
   CP_PHASE = 1; cpBuffer = ''; cpNewPin = '';
   cpUpdateDots();
   var el = document.getElementById('cp-error');
@@ -2154,6 +2175,11 @@ function openChangePinModal() {
 }
 
 function closeChangePinModal() {
+  /* Reset mobile input on close */
+  if (_isTouchDevice) {
+    var cpInput = document.getElementById('cp-mobile-input');
+    if (cpInput) { cpInput.value = ''; cpInput.classList.remove('error'); }
+  }
   var overlay = document.getElementById('change-pin-overlay');
   if (overlay) overlay.style.display = 'none';
   CP_PHASE = 1; cpBuffer = ''; cpNewPin = '';
@@ -2202,12 +2228,15 @@ function cpCheck() {
     /* Current PIN correct — move to new PIN */
     CP_PHASE = 2; cpBuffer = '';
     cpUpdateDots(); cpSetTitles();
+    /* Clear mobile input for next phase entry */
+    _cpClearMobileInput();
 
   } else if (CP_PHASE === 2) {
     /* Store new PIN, move to confirmation */
     cpNewPin = cpBuffer;
     CP_PHASE = 3; cpBuffer = '';
     cpUpdateDots(); cpSetTitles();
+    _cpClearMobileInput();
 
   } else if (CP_PHASE === 3) {
     /* Confirm new PIN */
@@ -2311,37 +2340,92 @@ async function initDashboard() {
    focus() may not work. We keep both: numpad for non-touch, input for touch.
    ──────────────────────────────────────────────────────────────── */
 
+/* ────────────────────────────────────────────────────────────────
+   MOBILE PIN INPUT — INIT  (v4.1.0)
+   ─────────────────────────────────────────────────────────────────
+   Called once at page load to set up the native numeric keyboard
+   experience on touch devices (phones, tablets).
+
+   WHAT WAS WRONG (v3.x / v4.0.0):
+   ─────────────────────────────────
+   1. DUPLICATE DOTS: the original pin-dots (6 circles) were left visible
+      alongside the native input which shows its own • • • • • • placeholder.
+      Fix: add .mobile-pin-active class to .pin-card → CSS hides pin-dots and
+      pin-grid via .pin-card.mobile-pin-active rules in app.css.
+
+   2. INPUT NOT CENTRED: width:200px with no margin:auto — rendered
+      left-aligned inside the card. Fix: width:100%, max-width:280px,
+      margin: 0 auto, set in app.css.
+
+   3. AUTO-FOCUS NEVER FIRED: the MutationObserver watched for style.display
+      changes on #pin-overlay, but the overlay is visible from page load
+      with no style attribute — it's shown via CSS, not JS. The observer
+      never triggered because there was never a style change to observe.
+      Fix: use requestAnimationFrame + setTimeout chain after DOMContentLoaded.
+      Also re-focus whenever the overlay is un-hidden (pin error reset).
+
+   4. CHANGE PIN MODAL: same focus issue — fixed by calling focusMobilePinInput()
+      from openChangePinModal() and openNotifyModal() where PIN entry is needed.
+   ──────────────────────────────────────────────────────────────── */
+
+/** True when running on a touch device — set once at init */
+var _isTouchDevice = false;
+
 (function initMobilePinInput() {
-  /* Only activate on genuine touch devices */
-  if (!navigator.maxTouchPoints || navigator.maxTouchPoints === 0) return;
+  /* Detect genuine touch devices — exclude laptops with touch screens
+     by also checking pointer type and screen width */
+  var hasTouch   = navigator.maxTouchPoints > 0;
+  var isNarrow   = window.innerWidth < 1024;
+  if (!hasTouch || !isNarrow) return;
 
-  var input   = document.getElementById('pin-mobile-input');
-  var grid    = document.querySelector('.pin-grid');
-  var hint    = document.querySelector('.pin-hint');
-  if (!input) return;
+  _isTouchDevice = true;
 
-  /* Show input, hide numpad */
+  var card  = document.querySelector('.pin-card');
+  var input = document.getElementById('pin-mobile-input');
+  var hint  = document.querySelector('.pin-hint');
+  if (!input || !card) return;
+
+  /* ── 1. Switch pin-card to mobile mode ──────────────────────
+     Adding .mobile-pin-active causes CSS to hide:
+       • .pin-dots   (the 6 circle indicators)
+       • .pin-grid   (the custom numpad)
+     The native input replaces both visually. */
+  card.classList.add('mobile-pin-active');
   input.style.display = 'block';
-  if (grid) grid.style.display = 'none';
 
-  /* Update hint text */
+  /* Update the hint text to match the new UX */
   if (hint) hint.textContent = 'Tap to type your PIN';
 
-  /* Auto-focus the input when the PIN overlay becomes visible */
-  var observer = new MutationObserver(function() {
-    var overlay = document.getElementById('pin-overlay');
-    if (overlay && overlay.style.display !== 'none') {
-      setTimeout(function() { input.focus(); }, 100);
-    }
+  /* ── 2. Auto-focus immediately on page load ─────────────────
+     The PIN overlay is visible from initial page render (no JS
+     display:none set on it). We can't use a MutationObserver
+     because there's no style change to observe on first load.
+     requestAnimationFrame ensures the DOM is painted before focus(). */
+  requestAnimationFrame(function() {
+    setTimeout(function() { _focusMobilePin(); }, 120);
   });
-  var overlay = document.getElementById('pin-overlay');
-  if (overlay) observer.observe(overlay, { attributes: true, attributeFilter: ['style'] });
-
-  /* Also focus immediately if overlay already visible */
-  if (overlay && overlay.style.display !== 'none') {
-    setTimeout(function() { input.focus(); }, 100);
-  }
 })();
+
+/**
+ * Focus the mobile PIN input, if on a touch device.
+ * Called from openChangePinModal() and whenever the PIN overlay
+ * is re-shown (e.g. after a PIN error reset).
+ *
+ * Uses a small delay to ensure the element is visible and interactive
+ * before calling focus() — iOS requires this.
+ */
+function _focusMobilePin() {
+  if (!_isTouchDevice) return;
+  var input = document.getElementById('pin-mobile-input');
+  if (!input || input.style.display === 'none') return;
+  /* Clear any previous value */
+  input.value = '';
+  input.classList.remove('error');
+  /* Small delay: iOS needs the element to be in a painted, interactive state */
+  setTimeout(function() {
+    try { input.focus(); } catch(e) {}
+  }, 80);
+}
 
 /**
  * Handler for the mobile <input> PIN field.
@@ -2933,6 +3017,53 @@ function _calcSslDays(sslExpiry) {
   var expMs = new Date(sslExpiry).getTime();
   if (isNaN(expMs)) return null;
   return Math.ceil((expMs - Date.now()) / 86400000);
+}
+
+
+/**
+ * Handler for the mobile Change-PIN input field.
+ * Mirrors cpDigit() / cpDelete() logic but driven by native keyboard input.
+ * The cp-mobile-input is shown on touch devices instead of the numpad.
+ *
+ * @param {HTMLInputElement} el
+ */
+
+/** Clear and re-focus the cp-mobile-input between PIN phases (on mobile) */
+function _cpClearMobileInput() {
+  if (!_isTouchDevice) return;
+  var inp = document.getElementById('cp-mobile-input');
+  if (!inp) return;
+  inp.value = '';
+  inp.classList.remove('error');
+  setTimeout(function() { try { inp.focus(); } catch(e) {} }, 100);
+}
+
+function cpMobileInput(el) {
+  /* Strip non-digits */
+  var raw = el.value.replace(/\D/g, '').slice(0, 6);
+  el.value = raw;
+
+  /* Sync visual dot indicators */
+  cpBuffer = raw;
+  cpUpdateDots();
+  document.getElementById('cp-error').textContent = '';
+
+  if (raw.length === 6) {
+    el.blur();  /* dismiss keyboard */
+    setTimeout(function() {
+      /* Run the phase check — same path as cpDigit() reaching 6 chars */
+      cpCheck();
+      /* On wrong PIN: clear input + show error state */
+      if (cpBuffer === '') {
+        el.value = '';
+        el.classList.add('error');
+        setTimeout(function() { el.classList.remove('error'); el.value = ''; }, 700);
+      } else {
+        /* Advanced to next phase — clear input for next entry */
+        el.value = '';
+      }
+    }, 150);
+  }
 }
 
 /* ── Page bootstrap ─────────────────────────────────────────────

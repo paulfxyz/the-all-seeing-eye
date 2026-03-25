@@ -10,6 +10,90 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## 🔖 [4.1.0] — 2026-03-25
+
+### 📱 Mobile PIN UX Overhaul — No Duplicate Dots · Auto-Focus · Keyboard on Demand
+
+---
+
+#### The three problems visible in the screenshot
+
+**Problem 1 — Duplicate dot indicators**
+
+The mobile view showed two sets of PIN entry feedback simultaneously:
+- The original `.pin-dots` (6 SVG circles from the desktop numpad UX)
+- The `<input type="password">` with `placeholder="······"` (6 grey dots from the browser's password placeholder)
+
+Both were visible at the same time, creating a confusing and ugly double-row of dots.
+
+**Root cause:** When `initMobilePinInput()` ran, it set `pin-grid` to `display:none` (hiding the numpad) but left `pin-dots` visible. The native input then rendered its own placeholder dots below them.
+
+**Fix:** Added `.pin-card.mobile-pin-active .pin-dots { display: none }` and `.pin-card.mobile-pin-active .pin-grid { display: none }` in `app.css`. JS adds `mobile-pin-active` class to `.pin-card` instead of inline `display:none` per element — cleaner, easier to override, debuggable in DevTools.
+
+**Problem 2 — Input not centred**
+
+The input rendered left-aligned on mobile. CSS had `width: 200px` with no `margin: auto`.
+
+**Fix:** `width: 100%; max-width: 280px; margin: 0 auto;` — now fills the card width, capped at 280px, centred.
+
+**Problem 3 — Auto-focus never fired**
+
+The `initMobilePinInput()` IIFE used a `MutationObserver` watching for `style` attribute changes on `#pin-overlay`. However, the PIN overlay is visible from initial page render — no `style` attribute is ever written to it (it's shown via CSS default state, not `el.style.display`). The observer never triggered because there was never a mutation to observe.
+
+The backup check `if (overlay && overlay.style.display !== 'none')` also failed because `overlay.style.display` is `""` (empty string — no inline style) for an element that's visible via CSS.
+
+**Fix:** Use `requestAnimationFrame(() => setTimeout(() => _focusMobilePin(), 120))`. This fires after the first paint, ensuring the element is rendered and interactive before `focus()` is called. iOS requires this two-step delay — `focus()` called during the same JS tick as page load is silently ignored.
+
+---
+
+#### Change PIN modal — same issues fixed
+
+The Change PIN modal previously only had the numpad (no native input on mobile), causing the same tap-to-dismiss numpad issues.
+
+Added:
+- `<input id="cp-mobile-input">` — same pattern as login input
+- `openChangePinModal()` now adds `.mobile-pin-active` to `#cp-card` on touch devices
+- Auto-focus fires after the 250ms card-in animation completes
+- `cpMobileInput(el)` handler — mirrors `cpDigit()` / `cpCheck()` for keyboard input
+- `_cpClearMobileInput()` — clears and re-focuses between phases (current → new → confirm)
+
+---
+
+#### New architecture: `_isTouchDevice` global flag
+
+Previously, touch detection (`navigator.maxTouchPoints > 0`) was scattered across multiple places. Now a single `var _isTouchDevice = false` is set during `initMobilePinInput()` (which also checks `window.innerWidth < 1024` to exclude touch laptops). All mobile-specific code now checks `_isTouchDevice` rather than re-querying `navigator.maxTouchPoints`.
+
+### 🐛 Fixed
+
+- Duplicate dot indicators on mobile login screen
+- Mobile input left-aligned (fixed with `width:100%, max-width:280px, margin:0 auto`)
+- Auto-focus on page load (replaced broken MutationObserver with rAF+setTimeout)
+- Change PIN modal: no native keyboard on mobile (added cp-mobile-input)
+- Change PIN modal: auto-focus not firing on each phase (added _cpClearMobileInput)
+
+### ✨ Added
+
+- `_isTouchDevice` global flag — single touch detection, set at init
+- `_focusMobilePin()` — reusable focus helper for login PIN input
+- `cpMobileInput(el)` — handler for Change PIN mobile input
+- `_cpClearMobileInput()` — clear + re-focus between CP phases
+- CSS `.pin-card.mobile-pin-active .pin-dots { display:none }` — class-based hiding
+- CSS `.pin-card.mobile-pin-active .pin-grid { display:none }` — same for numpad
+- `id="cp-card"` on Change PIN inner div — JS can add `.mobile-pin-active`
+- `id="cp-grid"` on Change PIN numpad — JS can target it directly
+
+### 🔄 Changed
+
+- `initMobilePinInput()` — uses `rAF + setTimeout` instead of MutationObserver
+- `initMobilePinInput()` — uses `.mobile-pin-active` class instead of inline styles
+- `openChangePinModal()` — activates mobile mode + auto-focuses input
+- `closeChangePinModal()` — clears cp-mobile-input on close
+- `cpCheck()` — calls `_cpClearMobileInput()` between phases
+- CSS `.pin-mobile-input` — `width:100%`, `max-width:280px`, `margin:0 auto`
+- index.html — cp-mobile-input added inside change-PIN modal
+
+---
+
 ## 🔖 [4.0.0] — 2026-03-23
 
 ### 🚀 Stable Release — Notification Persistence · Smart Cooldowns · Full Production-Ready

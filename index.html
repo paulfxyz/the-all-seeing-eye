@@ -558,7 +558,7 @@
      background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(16px);
      align-items:center;justify-content:center"
      onclick="if(event.target===this)closeChangePinModal()">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);
+  <div id="cp-card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);
        padding:var(--space-8);width:min(360px,94vw);text-align:center;
        box-shadow:var(--shadow-lg),var(--shadow-glow);animation:card-in 0.25s cubic-bezier(.34,1.56,.64,1)">
 
@@ -568,15 +568,32 @@
     <p id="cp-subtitle" style="font-size:var(--text-sm);color:var(--text-muted);
         margin-bottom:var(--space-5)">Enter your current PIN</p>
 
-    <!-- Dot indicators -->
+    <!-- Dot indicators (hidden on mobile via .mobile-pin-active class) -->
     <div style="display:flex;justify-content:center;gap:12px;margin-bottom:var(--space-5)" id="cp-dots">
       <div class="pin-dot" id="cp-dot-0"></div><div class="pin-dot" id="cp-dot-1"></div>
       <div class="pin-dot" id="cp-dot-2"></div><div class="pin-dot" id="cp-dot-3"></div>
       <div class="pin-dot" id="cp-dot-4"></div><div class="pin-dot" id="cp-dot-5"></div>
     </div>
 
-    <!-- Numpad -->
-    <div class="pin-grid" style="margin-bottom:var(--space-3)">
+    <!-- Mobile numeric input — shown on touch devices, hidden on desktop.
+         Replaces the numpad with the native OS keyboard.
+         JS syncs oninput with cpBuffer + cpDigit() logic. -->
+    <input type="password"
+           id="cp-mobile-input"
+           inputmode="numeric"
+           pattern="[0-9]*"
+           maxlength="6"
+           autocomplete="off"
+           autocorrect="off"
+           spellcheck="false"
+           placeholder="······"
+           class="pin-mobile-input"
+           style="display:none"
+           oninput="cpMobileInput(this)"
+           aria-label="Enter PIN">
+
+    <!-- Numpad (hidden on mobile via .mobile-pin-active class on parent card) -->
+    <div class="pin-grid" id="cp-grid" style="margin-bottom:var(--space-3)">
       <button class="pin-btn" onclick="cpDigit('1')">1</button>
       <button class="pin-btn" onclick="cpDigit('2')">2</button>
       <button class="pin-btn" onclick="cpDigit('3')">3</button>
