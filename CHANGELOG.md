@@ -8,6 +8,90 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 > 🗓️ For full setup instructions, see the **[INSTALL.md](./INSTALL.md)**.
 > 👤 Made with ❤️ by [Paul Fleury](https://mercury.sh) — [@paulfxyz](https://github.com/paulfxyz)
 
+
+---
+
+## 🔖 [5.1.0] — 2026-03-25
+
+### 🌍 Internationalization (i18n) — 11 Languages · Language Picker UI
+
+---
+
+#### Why i18n?
+
+Mercury is used globally — the domain monitoring use case is universal. Adding native-language support makes the landing page accessible to non-English audiences and signals the project's production-grade quality. This was also a deliberate exercise in building a zero-dependency i18n engine: no library, no JSON files to host, just a clean JS module and a `data-i18n` attribute convention.
+
+#### What was challenging?
+
+**Challenge 1 — Translation quality across 11 very different languages**
+
+The core difficulty isn't adding `data-i18n` attributes — it's making the translations *sound natural*. Marketing copy is full of idioms ("watches over your fleet", "at the speed of a god", "never a flood") that translate poorly if done literally.
+
+For each language, the translation strategy was:
+- French: lean into technical elegance, use professional terminology ("Surveillance uptime", "zéro configuration")
+- German: compound nouns work in our favor ("Domainüberwachung"), be direct and precise
+- Spanish: warmer tone, use "tú" form throughout for modern dev audience
+- Portuguese (PT variant): avoid BR slang, keep it clean and professional
+- Turkish: modern tech vocabulary, avoid over-formal Ottoman roots
+- Chinese (Simplified): tech lingo stays in Latin (API, DNS, SSL, DMARC), translate narratives
+- Japanese: katakana for borrowed terms (ドメイン, SSL, DNS), keep honorifics neutral (です/ます)
+- Russian: professional tone, avoid anglicisms where good Russian equivalents exist
+- Italian: enthusiastic and direct, "il tuo server, le tue regole" sounds better than an exact literal map
+- Hindi: Devanagari for narrative, technical terms stay Latin (API, SSL, AES-256)
+
+**Challenge 2 — Elements with mixed HTML (innerHTML) vs plain text (textContent)**
+
+Some translatable elements contain `<code>`, `<strong>`, or `<em>` tags inside them. Using `textContent` on those would strip the tags. Solution: `data-i18n-html` attribute (triggers `innerHTML` instead of `textContent`). Used for:
+- `hero_subtitle` (contains `<strong>`)
+- `how_step1_body` and `how_step2_body` (contain `<code>` tags for filenames)
+
+**Challenge 3 — Language detection priority**
+
+Correct order of precedence:
+1. `mercury-lang` cookie (explicit user preference — highest priority)
+2. `navigator.languages` array (browser's preferred list)
+3. `navigator.language` fallback
+4. `'en'` hardcoded fallback
+
+**Challenge 4 — Dropdown UX without a JS framework**
+
+The dropdown uses CSS transforms (`translateY` + `scale(0.97)`) for the open/close animation, with `pointer-events: none/all` to prevent interaction when hidden. `aria-expanded` is toggled for accessibility. Keyboard `Escape` closes it. Click-outside detection via a `document.click` listener with `!picker.contains(e.target)`.
+
+### ✨ Added
+
+- `i18n.js` — 1,079-line translation file, 11 languages × ~70 keys each
+  - Languages: English · Français · Deutsch · Español · Português · Italiano · Türkçe · Русский · 中文 · 日本語 · हिंदी
+  - Keys cover: nav, hero (title/subtitle/pills/CTAs), numbers band, all 6 feature cards, preview section, how-it-works steps, under-the-hood headings, 4 alert cards + badges, CTA section, built-by quote, footer links, copyright
+- Language picker component in navbar:
+  - Flag emoji + 2-letter language code badge
+  - Smooth dropdown with `translateY` + `scale` animation
+  - Active state highlights current language
+  - `aria-label`, `aria-expanded`, `aria-haspopup`, `role="listbox"` for a11y
+  - Keyboard navigation (`Escape` to close)
+  - Click-outside-to-close
+  - Mobile: hides text label, keeps flag + chevron
+- `data-i18n="key"` attributes on all translatable text nodes (92 total)
+- `data-i18n-html="key"` for elements with inner HTML markup
+- Cookie persistence: `mercury-lang` cookie (1-year expiry, `SameSite=Lax`)
+- Auto-detect: browser `navigator.languages` used on first visit
+- `<html lang="...">` attribute updates on language switch (e.g., `zh-Hans`, `ja`)
+
+### 🔄 Changed
+
+- `landing.html` (renamed from `index.html` in repo, deployed as `index.html` to FTP):
+  - All visible text wrapped in `data-i18n` spans for translation
+  - CTA urgency text updated to include full subtitle from i18n key
+  - Footer year updated: 2025 → 2026, copyright clarified "MIT License"
+  - No Perplexity Computer references anywhere on the public-facing page
+- Nav: language picker sits after GitHub button, uses Mercury design system tokens
+
+### 🔧 Fixed
+
+- Footer copyright year was 2025 → corrected to 2026
+- CTA subtitle text was truncated ("Deploy in 60 seconds. No account. No cloud.") vs full string in i18n.js
+
+---
+
 ---
 
 ## 🔖 [5.0.0] — 2026-03-25

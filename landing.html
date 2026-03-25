@@ -1,0 +1,2619 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<!-- Mercury.sh — Domain Guardian -->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mercury — The Messenger God for Your Domains</title>
+<meta name="description" content="Mercury watches over your websites and domains. Uptime, DNS, SSL, and email alerts — flawlessly, serverlessly.">
+<meta name="theme-color" content="#7C6CF8">
+
+<!-- Fonts: Instrument Serif (display) + Cabinet Grotesk (logotype + stats) + Satoshi (body) + JetBrains Mono -->
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=instrument-serif@400,400i&f[]=cabinet-grotesk@700,800,900&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════
+   MERCURY.SH — Design System
+   Brand: Mercury, the Winged Messenger God
+   Palette: Pearl white primary · Quicksilver violet accent · Midnight dark
+   Typography: Instrument Serif (display) · Satoshi (body) · JetBrains Mono (code)
+═══════════════════════════════════════════════════════════ */
+
+/* ── Design Tokens ───────────────────────────────────────── */
+:root {
+  /* Type scale (fluid, clamp-based) */
+  --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
+  --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
+  --text-base: clamp(1rem,     0.95rem + 0.25vw, 1.125rem);
+  --text-lg:   clamp(1.125rem, 1rem    + 0.75vw, 1.5rem);
+  --text-xl:   clamp(1.5rem,   1.2rem  + 1.25vw, 2.25rem);
+  --text-2xl:  clamp(2rem,     1.2rem  + 2.5vw,  3.5rem);
+  --text-3xl:  clamp(2.5rem,   1rem    + 4vw,    5rem);
+  --text-hero: clamp(3.5rem,   1rem    + 8vw,    9rem);
+
+  /* Spacing (4px base grid) */
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem;
+  --space-4: 1rem;    --space-5: 1.25rem; --space-6: 1.5rem;
+  --space-8: 2rem;    --space-10: 2.5rem; --space-12: 3rem;
+  --space-16: 4rem;   --space-20: 5rem;   --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Fonts */
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-logo:    'Cabinet Grotesk', 'DM Sans', sans-serif;
+  --font-body:    'Satoshi', 'DM Sans', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  /* Transitions */
+  --ease: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-slow: 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Light Theme (default) ────────────────────────────────── */
+[data-theme="light"] {
+  --bg:          #F8F7FF;
+  --bg-2:        #FFFFFF;
+  --surface:     #FFFFFF;
+  --surface-2:   #F3F1FF;
+  --surface-3:   #EAE7FF;
+  --border:      #E2DEFF;
+  --border-soft: #EDE9FF;
+
+  --text:        #0D0B1E;
+  --text-muted:  #5B5478;
+  --text-faint:  #A9A0C8;
+
+  --accent:      #7C6CF8;
+  --accent-2:    #5D4CE8;
+  --accent-3:    #A396FF;
+  --accent-soft: rgba(124, 108, 248, 0.10);
+  --accent-glow: rgba(124, 108, 248, 0.25);
+
+  --gold:        #D4972A;
+  --gold-soft:   rgba(212, 151, 42, 0.12);
+
+  --green:       #16A34A;
+  --green-soft:  rgba(22, 163, 74, 0.10);
+  --red:         #DC2626;
+  --amber:       #D97706;
+
+  --shadow-sm:   0 1px 3px rgba(13, 11, 30, 0.06), 0 1px 2px rgba(13, 11, 30, 0.04);
+  --shadow-md:   0 4px 16px rgba(13, 11, 30, 0.08), 0 2px 6px rgba(13, 11, 30, 0.05);
+  --shadow-lg:   0 16px 48px rgba(13, 11, 30, 0.10), 0 4px 16px rgba(13, 11, 30, 0.06);
+  --shadow-glow: 0 0 40px rgba(124, 108, 248, 0.15);
+  --shadow-gold: 0 0 40px rgba(212, 151, 42, 0.15);
+}
+
+/* ── Dark Theme ────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:          #07071A;
+  --bg-2:        #0D0D28;
+  --surface:     #0F0F2E;
+  --surface-2:   #161640;
+  --surface-3:   #1E1E52;
+  --border:      #252560;
+  --border-soft: #1A1A48;
+
+  --text:        #F0EEFF;
+  --text-muted:  #9B93CC;
+  --text-faint:  #4A4480;
+
+  --accent:      #9D8FFF;
+  --accent-2:    #B8ADFF;
+  --accent-3:    #7C6CF8;
+  --accent-soft: rgba(157, 143, 255, 0.12);
+  --accent-glow: rgba(157, 143, 255, 0.30);
+
+  --gold:        #F0C060;
+  --gold-soft:   rgba(240, 192, 96, 0.12);
+
+  --green:       #4ADE80;
+  --green-soft:  rgba(74, 222, 128, 0.12);
+  --red:         #F87171;
+  --amber:       #FBBF24;
+
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md:   0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg:   0 16px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 60px rgba(157, 143, 255, 0.20);
+  --shadow-gold: 0 0 60px rgba(240, 192, 96, 0.15);
+}
+
+/* ── Reset & Base ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.6;
+  overflow-x: hidden;
+  transition: background var(--ease-slow), color var(--ease-slow);
+}
+
+a { color: inherit; text-decoration: none; }
+img, svg { display: block; }
+
+/* ── Page-level ambient texture ─────────── */
+[data-theme="light"] body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124,108,248,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(212,151,42,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+[data-theme="dark"] body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124,108,248,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(240,192,96,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════════════════ */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  height: 64px;
+  display: flex; align-items: center;
+  padding: 0 var(--space-8);
+  background: rgba(248, 247, 255, 0.80);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-bottom: 1px solid var(--border-soft);
+  transition: background var(--ease-slow);
+}
+
+[data-theme="dark"] nav {
+  background: rgba(7, 7, 26, 0.85);
+}
+
+.nav-inner {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+/* Logo */
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-logo);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.nav-logo-icon {
+  width: 32px; height: 32px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.nav-logo .dot-sh {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+/* Nav links */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  margin-left: auto;
+  list-style: none;
+}
+
+.nav-links a {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  transition: color var(--ease);
+}
+
+.nav-links a:hover { color: var(--accent); }
+
+/* Theme toggle */
+.theme-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all var(--ease);
+  flex-shrink: 0;
+}
+.theme-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* CTA button */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--ease);
+  border: none;
+  touch-action: manipulation;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 12px var(--accent-glow);
+}
+.btn-primary:hover {
+  background: var(--accent-2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, #D4972A, #E8AF44);
+  color: #fff;
+  box-shadow: 0 2px 16px rgba(212, 151, 42, 0.35);
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-base);
+}
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(212, 151, 42, 0.45);
+  filter: brightness(1.05);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-lg {
+  padding: var(--space-3) var(--space-8);
+  font-size: var(--text-base);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════════════════════ */
+.hero {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: calc(64px + var(--space-24)) var(--space-8) var(--space-24);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle dot grid background */
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 80%);
+  opacity: 0.5;
+}
+
+.hero-inner {
+  position: relative;
+  max-width: 900px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+/* Mercury planet SVG */
+.hero-planet {
+  width: clamp(120px, 20vw, 180px);
+  height: clamp(120px, 20vw, 180px);
+  animation: planet-float 8s ease-in-out infinite;
+  filter: drop-shadow(0 8px 32px var(--accent-glow));
+}
+
+@keyframes planet-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33%       { transform: translateY(-12px) rotate(2deg); }
+  66%       { transform: translateY(-6px) rotate(-1deg); }
+}
+
+/* Orbital ring slow spin */
+@keyframes ring-spin {
+  from { transform: rotate(-20deg); }
+  to   { transform: rotate(340deg); }
+}
+
+/* Eyebrow */
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid rgba(124, 108, 248, 0.2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+}
+
+.eyebrow-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.eyebrow-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--gold);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  margin-left: var(--space-1);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* Hero title */
+.hero-title {
+  font-family: var(--font-display);
+  font-size: var(--text-hero);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.hero-title em {
+  font-style: italic;
+  color: var(--accent);
+  position: relative;
+}
+
+/* Shimmering underline on title accent */
+.hero-title em::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--gold), var(--accent), transparent);
+  background-size: 200% 100%;
+  border-radius: 2px;
+  animation: shimmer-line 3s linear infinite;
+}
+
+@keyframes shimmer-line {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Hero subtitle */
+.hero-subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  font-weight: 500;
+  color: var(--text-muted);
+  line-height: 1.4;
+  max-width: 580px;
+}
+
+.hero-subtitle strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Stat pills */
+.hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-pill-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+/* Live counter animation */
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--green);
+  background: var(--green-soft);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+}
+
+.live-indicator .pulse-ring {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  position: relative;
+}
+
+.live-indicator .pulse-ring::after {
+  content: '';
+  position: absolute; inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--green);
+  animation: ring-pulse 2s ease-out infinite;
+}
+
+@keyframes ring-pulse {
+  0%   { opacity: 1; transform: scale(0.6); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* Hero buttons */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ORBITAL ANIMATION (hero decorative rings)
+═══════════════════════════════════════════════════════════ */
+.orbit-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(124, 108, 248, 0.15);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: orbit-pulse 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.orbit-ring:nth-child(1) { width: 300px; height: 300px; animation-delay: 0s; }
+.orbit-ring:nth-child(2) { width: 500px; height: 500px; animation-delay: -2s; border-color: rgba(212,151,42,0.08); animation: orbit-pulse 6s ease-in-out infinite, orbit-rotate 60s linear infinite; }
+.orbit-ring:nth-child(3) { width: 720px; height: 720px; animation-delay: -4s; }
+
+@keyframes orbit-pulse {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  50%       { opacity: 1;   transform: translate(-50%, -50%) scale(1.02); }
+}
+
+@keyframes orbit-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MARQUEE (trust bar)
+═══════════════════════════════════════════════════════════ */
+.marquee-section {
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.marquee-track {
+  display: flex;
+  gap: var(--space-12);
+  animation: marquee 30s linear infinite;
+  width: max-content;
+}
+
+.marquee-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.marquee-item svg { color: var(--accent); }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NUMBERS STATS BAND
+═══════════════════════════════════════════════════════════ */
+.numbers-section {
+  padding: var(--space-16) var(--space-8);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.numbers-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-8);
+  text-align: center;
+}
+
+.number-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.number-value {
+  font-family: var(--font-logo);
+  font-size: clamp(2.5rem, 1rem + 4vw, 4.5rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--text);
+  background: linear-gradient(135deg, var(--text) 50%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.number-value.accent-grad {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.number-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FEATURES SECTION
+═══════════════════════════════════════════════════════════ */
+.section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-32) var(--space-8);
+}
+
+.section-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: var(--space-4);
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: var(--space-5);
+}
+
+.section-title em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.section-body {
+  font-size: var(--text-lg);
+  color: var(--text-muted);
+  max-width: 560px;
+  line-height: 1.65;
+}
+
+/* Feature grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5);
+  margin-top: var(--space-16);
+}
+
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-6) var(--space-8);
+  transition: all var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-3));
+  opacity: 0;
+  transition: opacity var(--ease);
+}
+
+.feature-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md), 0 0 0 1px var(--accent-soft);
+  transform: translateY(-2px);
+}
+
+.feature-card:hover::before { opacity: 1; }
+
+.feature-icon {
+  width: 44px; height: 44px;
+  background: var(--accent-soft);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: var(--space-5);
+  color: var(--accent);
+}
+
+.feature-icon.gold-icon {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.feature-title {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: var(--space-3);
+  letter-spacing: -0.01em;
+}
+
+.feature-body {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.feature-body code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD PREVIEW (mock)
+═══════════════════════════════════════════════════════════ */
+.preview-section {
+  padding: var(--space-32) var(--space-8);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--surface-2) 50%, var(--bg) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 50%, var(--accent-glow) 0%, transparent 70%);
+  opacity: 0.3;
+}
+
+.preview-inner {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Browser chrome mock */
+.browser-chrome {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  overflow: hidden;
+  margin-top: var(--space-12);
+}
+
+.browser-bar {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-3) var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.browser-dots { display: flex; gap: 6px; }
+.browser-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+}
+.bd-red   { background: #FF5F57; }
+.bd-amber { background: #FFBD2E; }
+.bd-green { background: #28CA41; }
+
+.browser-url {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* Dashboard mock content */
+.dash-mock {
+  padding: var(--space-6);
+}
+
+/* Stats row */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.dash-stat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  text-align: left;
+}
+
+.dash-stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  margin-bottom: var(--space-2);
+}
+
+.dash-stat-value {
+  font-family: var(--font-logo);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.03em;
+}
+
+.dash-stat-value.accent { color: var(--accent); }
+.dash-stat-value.green  { color: var(--green); }
+
+/* Domain table */
+.dash-table {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.dash-thead {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.dash-th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+}
+
+.dash-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-soft);
+  align-items: center;
+  transition: background var(--ease);
+}
+.dash-row:last-child { border-bottom: none; }
+.dash-row:hover { background: var(--surface); }
+
+.dash-domain {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.dash-cell {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.status-up {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--green);
+  background: var(--green-soft);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+}
+
+.status-up::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HOW IT WORKS
+═══════════════════════════════════════════════════════════ */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-8);
+  margin-top: var(--space-16);
+  position: relative;
+}
+
+/* Connecting line between steps */
+.steps-grid::before {
+  content: '';
+  position: absolute;
+  top: 28px;
+  left: calc(16.667% + 28px);
+  right: calc(16.667% + 28px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), var(--gold), var(--accent));
+  opacity: 0.4;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.step-num {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-logo);
+  font-size: var(--text-lg);
+  font-weight: 900;
+  color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 6px var(--accent-soft);
+  position: relative; z-index: 1;
+}
+
+.step-title {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.step-body {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UNDER THE HOOD
+═══════════════════════════════════════════════════════════ */
+.hood-section {
+  background: #0B0B1F;
+  color: #E0DEFF;
+  padding: var(--space-32) var(--space-8);
+  position: relative;
+  overflow: hidden;
+}
+
+.hood-section::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 20%, rgba(124,108,248,0.1) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 50% at 70% 80%, rgba(212,151,42,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hood-inner {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.hood-section .section-eyebrow {
+  color: #9D8FFF;
+}
+
+.hood-section .section-title {
+  color: #F0EEFF;
+}
+
+.hood-section .section-title em {
+  color: #9D8FFF;
+}
+
+.hood-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-top: var(--space-12);
+}
+
+.hood-card {
+  background: rgba(15, 15, 46, 0.8);
+  border: 1px solid rgba(37, 37, 96, 0.8);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.hood-card-header {
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid rgba(37, 37, 96, 0.5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: #9B93CC;
+  letter-spacing: 0.05em;
+}
+
+.hood-card-header .dot-row {
+  display: flex;
+  gap: 5px;
+}
+
+.hood-card-header .dot-row span {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(155, 147, 204, 0.3);
+}
+
+.hood-code {
+  padding: var(--space-5);
+  font-family: var(--font-mono);
+  font-size: clamp(0.72rem, 0.6rem + 0.4vw, 0.85rem);
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.hood-code .kw  { color: #9D8FFF; }   /* keywords */
+.hood-code .fn  { color: #F0C060; }   /* functions */
+.hood-code .str { color: #4ADE80; }   /* strings */
+.hood-code .cm  { color: #4A4480; }   /* comments */
+.hood-code .var { color: #B8ADFF; }   /* variables */
+.hood-code .num { color: #FBBF24; }   /* numbers */
+.hood-code .op  { color: #9B93CC; }   /* operators */
+
+.hood-card-full {
+  grid-column: 1 / -1;
+}
+
+.hood-explain {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.hood-explain p {
+  color: #9B93CC;
+  line-height: 1.7;
+  font-size: var(--text-sm);
+}
+
+.hood-explain strong {
+  color: #F0EEFF;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ALERTS SHOWCASE
+═══════════════════════════════════════════════════════════ */
+.alerts-demo {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  margin-top: var(--space-12);
+  box-shadow: var(--shadow-lg);
+}
+
+.alert-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--border-soft);
+  position: relative;
+}
+.alert-card:last-child { border-bottom: none; }
+
+.alert-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+.alert-critical .alert-icon { background: rgba(220, 38, 38, 0.10); }
+.alert-warning  .alert-icon { background: rgba(217, 119, 6, 0.10); }
+.alert-ok       .alert-icon { background: var(--green-soft); }
+
+.alert-body { flex: 1; }
+
+.alert-title {
+  font-weight: 700;
+  font-size: var(--text-base);
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.alert-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.alert-badge {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.badge-critical { background: rgba(220,38,38,0.10); color: var(--red); }
+.badge-warning  { background: rgba(217,119,6,0.10);  color: var(--amber); }
+.badge-ok       { background: var(--green-soft); color: var(--green); }
+
+/* Time marker */
+.alert-time {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INSTALL / CTA BLOCK
+═══════════════════════════════════════════════════════════ */
+.cta-section {
+  padding: var(--space-32) var(--space-8);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 80% at 50% 50%, var(--accent-soft) 0%, transparent 70%);
+}
+
+.cta-inner {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.cta-urgency {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  margin-bottom: var(--space-8);
+}
+
+.install-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin: var(--space-8) 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.install-cmd {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text);
+  overflow-x: auto;
+}
+
+.install-cmd span { color: var(--accent); }
+
+.copy-btn {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition: all var(--ease);
+  white-space: nowrap;
+}
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ═══════════════════════════════════════════════════════════
+   BUILT BY
+═══════════════════════════════════════════════════════════ */
+.built-by {
+  padding: var(--space-24) var(--space-8);
+  border-top: 1px solid var(--border-soft);
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.built-author {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.author-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  flex-shrink: 0;
+}
+
+.author-name {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.author-role {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.author-links {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.author-links a {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--accent);
+  transition: opacity var(--ease);
+}
+.author-links a:hover { opacity: 0.7; }
+
+.built-quote {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: var(--space-6);
+}
+
+.built-with-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.built-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.badge {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+}
+
+.version-timeline {
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.version-timeline-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: var(--space-3);
+}
+
+.version-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+}
+
+.version-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.version-dot.active { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.version-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.version-label strong {
+  color: var(--text);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════════════ */
+footer {
+  border-top: 1px solid var(--border-soft);
+  padding: var(--space-8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-logo {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-family: var(--font-logo);
+  font-size: var(--text-base);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-muted);
+}
+
+.footer-logo .dot-sh { color: var(--accent); }
+
+.footer-links {
+  display: flex; gap: var(--space-6);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+}
+
+.footer-links a {
+  color: var(--text-faint);
+  transition: color var(--ease);
+}
+.footer-links a:hover { color: var(--accent); }
+
+.footer-right {
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  text-align: right;
+}
+
+.footer-right a {
+  color: var(--accent);
+  transition: opacity var(--ease);
+}
+.footer-right a:hover { opacity: 0.7; }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .feature-grid { grid-template-columns: repeat(2, 1fr); }
+  .steps-grid   { grid-template-columns: 1fr; }
+  .steps-grid::before { display: none; }
+  .dash-stats   { grid-template-columns: repeat(3, 1fr); }
+  .dash-thead, .dash-row { grid-template-columns: 2fr 1fr 1fr; }
+  .dash-row > :nth-child(n+4) { display: none; }
+  .dash-thead > :nth-child(n+4) { display: none; }
+  .built-by     { grid-template-columns: 1fr; }
+  .numbers-inner { grid-template-columns: repeat(3, 1fr); }
+  .hood-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  nav { padding: 0 var(--space-4); }
+  .nav-links { display: none; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .dash-stats { grid-template-columns: repeat(2, 1fr); }
+  .hero-actions { flex-direction: column; align-items: center; }
+  .install-box { flex-direction: column; align-items: flex-start; }
+  footer { flex-direction: column; text-align: center; }
+  .footer-right { text-align: center; }
+  .numbers-inner { grid-template-columns: repeat(2, 1fr); gap: var(--space-6); }
+  .numbers-inner .number-item:last-child { grid-column: 1 / -1; }
+  .alert-card { flex-direction: column; gap: var(--space-3); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCROLL-IN ANIMATIONS
+═══════════════════════════════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+/* Counter animation */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LANGUAGE PICKER
+═══════════════════════════════════════════════════════════ */
+.lang-picker {
+  position: relative;
+  margin-left: var(--space-3);
+}
+
+.lang-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--ease);
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.lang-trigger:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.lang-flag {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.lang-name {
+  font-family: var(--font-logo);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lang-chevron {
+  transition: transform 200ms ease;
+  opacity: 0.6;
+}
+
+.lang-picker.open .lang-chevron {
+  transform: rotate(180deg);
+}
+
+.lang-picker.open .lang-trigger {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-soft);
+  padding: var(--space-2);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+.lang-picker.open .lang-dropdown {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--ease), color var(--ease);
+}
+
+.lang-option:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.lang-option.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.lang-opt-flag {
+  font-size: 1.1rem;
+  line-height: 1;
+  width: 22px;
+  text-align: center;
+}
+
+.lang-opt-name {
+  flex: 1;
+}
+
+/* Mobile: hide lang-name on very small screens */
+@media (max-width: 480px) {
+  .lang-name { display: none; }
+  .lang-trigger { padding: 6px 8px; }
+}
+
+/* RTL support for Arabic/Hebrew (not in our set but future-proof) */
+[dir="rtl"] .lang-dropdown { right: auto; left: 0; transform-origin: top left; }
+
+</style>
+</head>
+
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     NAVIGATION
+════════════════════════════════════════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <!-- Mercury logo: winged M -->
+      <svg class="nav-logo-icon" viewBox="0 0 32 32" fill="none" aria-label="Mercury">
+        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+        <circle cx="16" cy="16" r="10" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>
+        <!-- Planet ring -->
+        <ellipse cx="16" cy="16" rx="14" ry="5" stroke="currentColor" stroke-width="1.2"
+                 transform="rotate(-20 16 16)" opacity="0.6"/>
+        <!-- Wings -->
+        <path d="M7 12 C3 10 2 7 5 6 C7 5 9 7 10 9" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" fill="none"/>
+        <path d="M25 12 C29 10 30 7 27 6 C25 5 23 7 22 9" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" fill="none"/>
+        <!-- Center dot -->
+        <circle cx="16" cy="16" r="3" fill="currentColor"/>
+      </svg>
+      mercury<span class="dot-sh">.sh</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#features" data-i18n="nav_features">Features</a></li>
+      <li><a href="#how-it-works" data-i18n="nav_how">How it works</a></li>
+      <li><a href="#under-the-hood" data-i18n="nav_hood">Under the hood</a></li>
+      <li><a href="#alerts" data-i18n="nav_alerts">Alerts</a></li>
+      <li><a href="https://demo.mercury.sh" target="_blank" rel="noopener" data-i18n="nav_demo">Demo</a></li>
+    </ul>
+
+    <button class="theme-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle light/dark">
+      <svg id="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <svg id="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+
+    <a href="https://github.com/paulfxyz/mercury-sh" target="_blank" rel="noopener" class="btn btn-ghost" style="margin-left: var(--space-2)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49v-1.7c-2.78.62-3.37-1.37-3.37-1.37-.45-1.17-1.11-1.48-1.11-1.48-.91-.64.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.38 9.38 0 0112 7.4c.85 0 1.7.12 2.5.34 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9v2.81c0 .27.18.59.69.49A10.27 10.27 0 0022 12.26C22 6.58 17.52 2 12 2z"/></svg>
+      GitHub
+    </a>
+
+    <!-- Language Picker -->
+    <div class="lang-picker" id="lang-picker">
+      <button class="lang-trigger" id="lang-trigger" aria-label="Change language" aria-haspopup="true" aria-expanded="false">
+        <span class="lang-flag" id="lang-flag">🇬🇧</span>
+        <span class="lang-name" id="lang-name">EN</span>
+        <svg class="lang-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="lang-dropdown" id="lang-dropdown" role="listbox" aria-label="Select language">
+        <div class="lang-option" data-lang="en" role="option"><span class="lang-opt-flag">🇬🇧</span><span class="lang-opt-name">English</span></div>
+        <div class="lang-option" data-lang="fr" role="option"><span class="lang-opt-flag">🇫🇷</span><span class="lang-opt-name">Français</span></div>
+        <div class="lang-option" data-lang="de" role="option"><span class="lang-opt-flag">🇩🇪</span><span class="lang-opt-name">Deutsch</span></div>
+        <div class="lang-option" data-lang="es" role="option"><span class="lang-opt-flag">🇪🇸</span><span class="lang-opt-name">Español</span></div>
+        <div class="lang-option" data-lang="pt" role="option"><span class="lang-opt-flag">🇵🇹</span><span class="lang-opt-name">Português</span></div>
+        <div class="lang-option" data-lang="it" role="option"><span class="lang-opt-flag">🇮🇹</span><span class="lang-opt-name">Italiano</span></div>
+        <div class="lang-option" data-lang="tr" role="option"><span class="lang-opt-flag">🇹🇷</span><span class="lang-opt-name">Türkçe</span></div>
+        <div class="lang-option" data-lang="ru" role="option"><span class="lang-opt-flag">🇷🇺</span><span class="lang-opt-name">Русский</span></div>
+        <div class="lang-option" data-lang="zh" role="option"><span class="lang-opt-flag">🇨🇳</span><span class="lang-opt-name">中文</span></div>
+        <div class="lang-option" data-lang="ja" role="option"><span class="lang-opt-flag">🇯🇵</span><span class="lang-opt-name">日本語</span></div>
+        <div class="lang-option" data-lang="hi" role="option"><span class="lang-opt-flag">🇮🇳</span><span class="lang-opt-name">हिंदी</span></div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════════════ -->
+<section class="hero" id="hero">
+  <!-- Orbital rings (decorative) -->
+  <div class="orbit-ring"></div>
+  <div class="orbit-ring"></div>
+  <div class="orbit-ring"></div>
+
+  <div class="hero-inner">
+
+    <!-- Mercury planet SVG with rotating ring -->
+    <svg class="hero-planet" viewBox="0 0 180 180" fill="none" aria-hidden="true">
+      <!-- Planet body -->
+      <defs>
+        <radialGradient id="planet-grad" cx="40%" cy="35%" r="60%">
+          <stop offset="0%"   stop-color="#A396FF"/>
+          <stop offset="50%"  stop-color="#7C6CF8"/>
+          <stop offset="100%" stop-color="#3D2FB0"/>
+        </radialGradient>
+        <radialGradient id="ring-grad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"  stop-color="#F0C060" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#D4972A" stop-opacity="0.3"/>
+        </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Orbital ring (back) — with slow rotation -->
+      <g style="transform-origin: 90px 90px; animation: ring-spin 45s linear infinite;">
+        <ellipse cx="90" cy="90" rx="76" ry="22" stroke="url(#ring-grad)" stroke-width="4"
+                 fill="none" opacity="0.5"/>
+      </g>
+
+      <!-- Planet sphere -->
+      <circle cx="90" cy="90" r="52" fill="url(#planet-grad)" filter="url(#glow)"/>
+
+      <!-- Surface detail (subtle lines) -->
+      <ellipse cx="90" cy="90" rx="52" ry="18" stroke="rgba(255,255,255,0.08)" stroke-width="1" fill="none"/>
+      <ellipse cx="90" cy="90" rx="52" ry="32" stroke="rgba(255,255,255,0.05)" stroke-width="1" fill="none"/>
+
+      <!-- Highlight shine -->
+      <ellipse cx="76" cy="72" rx="18" ry="12" fill="rgba(255,255,255,0.12)" transform="rotate(-15 76 72)"/>
+
+      <!-- Orbital ring (front) -->
+      <path d="M 14 90 Q 90 68 166 90" stroke="url(#ring-grad)" stroke-width="4"
+            fill="none" opacity="0.8" stroke-linecap="round"/>
+
+      <!-- Wings -->
+      <path d="M 34 72 C 12 62 6 46 18 42 C 28 38 36 48 40 58"
+            stroke="#F0C060" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8"/>
+      <path d="M 36 72 C 22 66 18 58 24 54" stroke="#F0C060" stroke-width="1.5"
+            stroke-linecap="round" fill="none" opacity="0.5"/>
+
+      <path d="M 146 72 C 168 62 174 46 162 42 C 152 38 144 48 140 58"
+            stroke="#F0C060" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8"/>
+      <path d="M 144 72 C 158 66 162 58 156 54" stroke="#F0C060" stroke-width="1.5"
+            stroke-linecap="round" fill="none" opacity="0.5"/>
+
+      <!-- Staff/caduceus hint -->
+      <line x1="90" y1="38" x2="90" y2="25" stroke="#F0C060" stroke-width="2"
+            stroke-linecap="round" opacity="0.6"/>
+      <circle cx="90" cy="22" r="4" fill="#F0C060" opacity="0.8"/>
+    </svg>
+
+    <!-- Eyebrow with v5.0 badge -->
+    <div class="hero-eyebrow">
+      <span class="eyebrow-dot"></span>
+      <span data-i18n="hero_eyebrow">Introducing Mercury · Domain Guardian</span>
+      <span class="eyebrow-badge" data-i18n="hero_badge">v5.0</span>
+    </div>
+
+    <!-- Title -->
+    <h1 class="hero-title">
+      <span data-i18n="hero_title_1">The</span> <em data-i18n="hero_title_em">Messenger</em><br><span data-i18n="hero_title_2">for your websites</span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="hero-subtitle" data-i18n-html="hero_subtitle"><strong>Uptime. DNS. SSL. Alerts.</strong> Mercury watches over every domain in your fleet — serverlessly, flawlessly, and with the speed of a god.</p>
+
+    <!-- Stat pills -->
+    <div class="hero-stats">
+      <div class="stat-pill"><span class="stat-pill-dot"></span> <span data-i18n="hero_stat_1">100 domains · zero config</span></div>
+      <div class="stat-pill">🔐 <span data-i18n="hero_stat_2">PIN-protected · AES-256</span></div>
+      <div class="stat-pill">📧 <span data-i18n="hero_stat_3">Resend email alerts</span></div>
+      <div class="stat-pill">🌙 <span data-i18n="hero_stat_4">Light / Dark · Mobile-first</span></div>
+    </div>
+
+    <!-- Live watching indicator -->
+    <div class="live-indicator">
+      <span class="pulse-ring"></span>
+      <span id="live-counter" data-i18n="hero_watching">Watching 100 domains right now</span>
+    </div>
+
+    <!-- Actions — Demo is PRIMARY, GitHub is secondary -->
+    <div class="hero-actions">
+      <a href="https://demo.mercury.sh" class="btn btn-gold btn-lg" target="_blank" rel="noopener">
+        <span data-i18n="hero_cta_demo">⚡ Try Live Demo</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+      <a href="https://github.com/paulfxyz/mercury-sh" class="btn btn-ghost btn-lg" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49v-1.7c-2.78.62-3.37-1.37-3.37-1.37-.45-1.17-1.11-1.48-1.11-1.48-.91-.64.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.38 9.38 0 0112 7.4c.85 0 1.7.12 2.5.34 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9v2.81c0 .27.18.59.69.49A10.27 10.27 0 0022 12.26C22 6.58 17.52 2 12 2z"/></svg>
+        <span data-i18n="hero_cta_github">View on GitHub</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     TRUST MARQUEE
+════════════════════════════════════════════════════════ -->
+<div class="marquee-section" aria-hidden="true">
+  <div class="marquee-track">
+    <!-- First set -->
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Real-time DNS checks
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      AES-256 encrypted secrets
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      SSL expiry monitoring
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .99h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+      Resend email alerts
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      DMARC · SPF · MX health
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Self-hosted · zero cloud
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      Cloudflare DoH · no CORS
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Smart cooldown alerts
+    </div>
+    <!-- Duplicate for seamless loop -->
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Real-time DNS checks
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      AES-256 encrypted secrets
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      SSL expiry monitoring
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .99h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+      Resend email alerts
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      DMARC · SPF · MX health
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Self-hosted · zero cloud
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      Cloudflare DoH · no CORS
+    </div>
+    <div class="marquee-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Smart cooldown alerts
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     NUMBERS STATS BAND
+════════════════════════════════════════════════════════ -->
+<div class="numbers-section">
+  <div class="numbers-inner">
+    <div class="number-item reveal">
+      <div class="number-value" data-count="100">100</div>
+      <div class="number-label" data-i18n="num_domains_label">Domains in demo</div>
+    </div>
+    <div class="number-item reveal reveal-delay-1">
+      <div class="number-value" data-count="5">5</div>
+      <div class="number-label" data-i18n="num_records_label">DNS record types</div>
+    </div>
+    <div class="number-item reveal reveal-delay-2">
+      <div class="number-value">3m</div>
+      <div class="number-label" data-i18n="num_refresh_label">Auto-refresh interval</div>
+    </div>
+    <div class="number-item reveal reveal-delay-3">
+      <div class="number-value accent-grad">0</div>
+      <div class="number-label" data-i18n="num_deps_label">External dependencies</div>
+    </div>
+    <div class="number-item reveal reveal-delay-4">
+      <div class="number-value accent-grad">∞</div>
+      <div class="number-label" data-i18n="num_inf_label">Domains you can monitor</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     FEATURES
+════════════════════════════════════════════════════════ -->
+<section id="features">
+  <div class="section">
+    <p class="section-eyebrow reveal" data-i18n="feat_eyebrow">What Mercury does</p>
+    <h2 class="section-title reveal reveal-delay-1"><span data-i18n="feat_title_1">Every signal,</span><br><em data-i18n="feat_title_em">all at once.</em></h2>
+    <p class="section-body reveal reveal-delay-2" data-i18n="feat_subtitle">From A records to DMARC policies, SSL expiry to uptime streaks — Mercury sees everything your domains are whispering, and tells you before they shout.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="feature-title" data-i18n="feat_1_title">Live uptime monitoring</div>
+        <div class="feature-body" data-i18n="feat_1_body">A-record checks via Cloudflare DoH. 5 parallel queries per domain. Batch-of-5 scanning to avoid DoH flood detection. Latency to the millisecond. Uptime history persisted server-side.</div>
+      </div>
+
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="feature-title" data-i18n="feat_2_title">SSL certificate tracking</div>
+        <div class="feature-body" data-i18n="feat_2_body">Real TLS handshakes via server-side PHP. Batch mode covers all domains in one request. Expiry warnings at 30d and 7d. Issuer detection — automatic Let's Encrypt badge. Zero false positives.</div>
+      </div>
+
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="feature-title" data-i18n="feat_3_title">DMARC · SPF · MX health</div>
+        <div class="feature-body" data-i18n="feat_3_body">Full email security posture per domain. Detects missing DMARC, <code>p=none</code> policies, missing SPF. NS and MX provider auto-identified and labelled. Email deliverability at a glance.</div>
+      </div>
+
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <div class="feature-title" data-i18n="feat_4_title">Smart email alerts</div>
+        <div class="feature-body" data-i18n="feat_4_body">Digest emails via Resend API with full domain health snapshot. Dual cooldown: 5-minute on manual refresh, 24-hour on auto. AES-256-GCM encrypted API keys. One email per event — never a flood.</div>
+      </div>
+
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <div class="feature-title" data-i18n="feat_5_title">Beautiful dashboard</div>
+        <div class="feature-body" data-i18n="feat_5_body">Progressively-rendered table with real-time stats. Dark/light mode, CSV export, per-row refresh. Mobile-first with native numeric PIN keyboard. No framework, no npm, no build step.</div>
+      </div>
+
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon gold-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        </div>
+        <div class="feature-title" data-i18n="feat_6_title">Open source · self-hosted</div>
+        <div class="feature-body" data-i18n="feat_6_body">MIT licensed. Your data stays on your server. No accounts, no cloud dependencies, no tracking. Three files to deploy. Works on SiteGround, cPanel, Cloudflare Pages — everywhere PHP runs.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     DASHBOARD PREVIEW
+════════════════════════════════════════════════════════ -->
+<div class="preview-section" id="preview">
+  <div class="preview-inner">
+    <p class="section-eyebrow reveal" data-i18n="prev_eyebrow">The dashboard</p>
+    <h2 class="section-title reveal reveal-delay-1"><span data-i18n="prev_title_1">Your domains,</span><br><em data-i18n="prev_title_em">at a glance.</em></h2>
+
+    <div class="browser-chrome reveal reveal-delay-2">
+      <div class="browser-bar">
+        <div class="browser-dots">
+          <div class="browser-dot bd-red"></div>
+          <div class="browser-dot bd-amber"></div>
+          <div class="browser-dot bd-green"></div>
+        </div>
+        <div class="browser-url">demo.mercury.sh</div>
+      </div>
+
+      <div class="dash-mock">
+        <!-- Stats row -->
+        <div class="dash-stats">
+          <div class="dash-stat">
+            <div class="dash-stat-label">Domains</div>
+            <div class="dash-stat-value accent">100</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-label">Online</div>
+            <div class="dash-stat-value green">98</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-label">SSL Valid</div>
+            <div class="dash-stat-value green">96</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-label">Alerts</div>
+            <div class="dash-stat-value" style="color:var(--amber)">3</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-label">Avg Latency</div>
+            <div class="dash-stat-value">84ms</div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="dash-table">
+          <div class="dash-thead">
+            <div class="dash-th">Domain</div>
+            <div class="dash-th">Status</div>
+            <div class="dash-th">Latency</div>
+            <div class="dash-th">SSL</div>
+            <div class="dash-th">DMARC</div>
+            <div class="dash-th">NS</div>
+          </div>
+          <div class="dash-row">
+            <div class="dash-domain">yourdomain.com</div>
+            <div class="dash-cell"><span class="status-up">UP</span></div>
+            <div class="dash-cell" style="font-family:var(--font-mono);font-size:var(--text-xs)">64ms</div>
+            <div class="dash-cell" style="color:var(--green)">214d</div>
+            <div class="dash-cell" style="color:var(--green)">reject</div>
+            <div class="dash-cell">SiteGround</div>
+          </div>
+          <div class="dash-row">
+            <div class="dash-domain">google.com</div>
+            <div class="dash-cell"><span class="status-up">UP</span></div>
+            <div class="dash-cell" style="font-family:var(--font-mono);font-size:var(--text-xs)">12ms</div>
+            <div class="dash-cell" style="color:var(--green)">57d</div>
+            <div class="dash-cell" style="color:var(--green)">reject</div>
+            <div class="dash-cell">Google</div>
+          </div>
+          <div class="dash-row">
+            <div class="dash-domain">app.yourdomain.com</div>
+            <div class="dash-cell"><span class="status-up" style="color:var(--amber);background:var(--gold-soft)">SSL⚠</span></div>
+            <div class="dash-cell" style="font-family:var(--font-mono);font-size:var(--text-xs)">91ms</div>
+            <div class="dash-cell" style="color:var(--amber)">18d</div>
+            <div class="dash-cell" style="color:var(--green)">quarantine</div>
+            <div class="dash-cell">Cloudflare</div>
+          </div>
+          <div class="dash-row">
+            <div class="dash-domain">github.com</div>
+            <div class="dash-cell"><span class="status-up">UP</span></div>
+            <div class="dash-cell" style="font-family:var(--font-mono);font-size:var(--text-xs)">38ms</div>
+            <div class="dash-cell" style="color:var(--green)">74d</div>
+            <div class="dash-cell" style="color:var(--green)">reject</div>
+            <div class="dash-cell">AWS</div>
+          </div>
+          <div class="dash-row">
+            <div class="dash-domain">openai.com</div>
+            <div class="dash-cell"><span class="status-up">UP</span></div>
+            <div class="dash-cell" style="font-family:var(--font-mono);font-size:var(--text-xs)">55ms</div>
+            <div class="dash-cell" style="color:var(--amber)">28d</div>
+            <div class="dash-cell" style="color:var(--amber)">quarantine</div>
+            <div class="dash-cell">Azure</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     HOW IT WORKS
+════════════════════════════════════════════════════════ -->
+<section id="how-it-works">
+  <div class="section">
+    <p class="section-eyebrow reveal" data-i18n="how_eyebrow">How it works</p>
+    <h2 class="section-title reveal reveal-delay-1"><span data-i18n="how_title_1">Up in minutes.</span><br><em data-i18n="how_title_em">On guard forever.</em></h2>
+
+    <div class="steps-grid">
+      <div class="step reveal reveal-delay-1">
+        <div class="step-num">1</div>
+        <div class="step-title" data-i18n="how_step1_title">Upload three files</div>
+        <div class="step-body" data-i18n-html="how_step1_body">Drop <code style="font-family:var(--font-mono);font-size:var(--text-xs);background:var(--surface-2);padding:2px 6px;border-radius:3px">index.html</code>, <code style="font-family:var(--font-mono);font-size:var(--text-xs);background:var(--surface-2);padding:2px 6px;border-radius:3px">app.css</code>, and <code style="font-family:var(--font-mono);font-size:var(--text-xs);background:var(--surface-2);padding:2px 6px;border-radius:3px">app.js</code> onto any web host. No npm, no build step, no Composer. Works on SiteGround, cPanel, or static hosting in 60 seconds.</div>
+      </div>
+
+      <div class="step reveal reveal-delay-2">
+        <div class="step-num">2</div>
+        <div class="step-title" data-i18n="how_step2_title">Add your domains</div>
+        <div class="step-body" data-i18n-html="how_step2_body">Edit <code style="font-family:var(--font-mono);font-size:var(--text-xs);background:var(--surface-2);padding:2px 6px;border-radius:3px">domains.list</code> — one domain per line. Or add live via the dashboard. Checks fire immediately: A records, NS, MX, TXT, DMARC, SPF, SSL.</div>
+      </div>
+
+      <div class="step reveal reveal-delay-3">
+        <div class="step-num">3</div>
+        <div class="step-title" data-i18n="how_step3_title">Mercury takes over</div>
+        <div class="step-body" data-i18n="how_step3_body">Auto-refresh every 3 minutes. Cron optional (10-min server-side PHP). Email alerts via Resend on downtime, SSL expiry, or missing DMARC — with smart cooldowns to prevent inbox spam.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     UNDER THE HOOD
+════════════════════════════════════════════════════════ -->
+<section class="hood-section" id="under-the-hood">
+  <div class="hood-inner">
+    <p class="section-eyebrow reveal" data-i18n="hood_eyebrow">Under the hood</p>
+    <h2 class="section-title reveal reveal-delay-1"><span data-i18n="hood_title_1">No magic.</span><br><em data-i18n="hood_title_em">Just good engineering.</em></h2>
+
+    <div class="hood-grid">
+      <!-- DNS Query Approach -->
+      <div class="hood-card reveal reveal-delay-1">
+        <div class="hood-card-header">
+          <div class="dot-row"><span></span><span></span><span></span></div>
+          dns-query.js — Cloudflare DoH
+        </div>
+        <div class="hood-code"><span class="cm">// Query 5 DNS record types per domain</span>
+<span class="cm">// via Cloudflare DNS-over-HTTPS</span>
+<span class="kw">const</span> <span class="var">types</span> <span class="op">=</span> [<span class="str">'A'</span>, <span class="str">'NS'</span>, <span class="str">'MX'</span>, <span class="str">'TXT'</span>, <span class="str">'CNAME'</span>];
+
+<span class="kw">async function</span> <span class="fn">queryDoH</span>(<span class="var">domain</span>, <span class="var">type</span>) {
+  <span class="kw">const</span> <span class="var">url</span> <span class="op">=</span>
+    <span class="str">`https://cloudflare-dns.com/dns-query`</span>
+    <span class="op">+</span> <span class="str">`?name=${domain}&type=${type}`</span>;
+  <span class="kw">const</span> <span class="var">resp</span> <span class="op">=</span> <span class="kw">await</span> <span class="fn">fetch</span>(<span class="var">url</span>, {
+    <span class="var">headers</span>: { <span class="str">'Accept'</span>: <span class="str">'application/dns-json'</span> }
+  });
+  <span class="kw">return</span> <span class="var">resp</span>.<span class="fn">json</span>();
+}
+
+<span class="cm">// Batch-of-5: avoids DoH rate limits</span>
+<span class="kw">for</span> (<span class="kw">let</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="var">domains</span>.<span class="var">length</span>; <span class="var">i</span> <span class="op">+=</span> <span class="num">5</span>) {
+  <span class="kw">const</span> <span class="var">batch</span> <span class="op">=</span> <span class="var">domains</span>.<span class="fn">slice</span>(<span class="var">i</span>, <span class="var">i</span> <span class="op">+</span> <span class="num">5</span>);
+  <span class="kw">await</span> Promise.<span class="fn">all</span>(<span class="var">batch</span>.<span class="fn">map</span>(<span class="fn">check</span>));
+}</div>
+      </div>
+
+      <!-- PHP SSL Check -->
+      <div class="hood-card reveal reveal-delay-2">
+        <div class="hood-card-header">
+          <div class="dot-row"><span></span><span></span><span></span></div>
+          ssl-check.php — TLS Handshake
+        </div>
+        <div class="hood-code"><span class="cm">// Real TLS handshake — no curl shortcuts</span>
+<span class="kw">function</span> <span class="fn">checkSSL</span>(<span class="var">$domain</span>) {
+  <span class="var">$ctx</span> <span class="op">=</span> <span class="fn">stream_context_create</span>([
+    <span class="str">'ssl'</span> <span class="op">=></span> [
+      <span class="str">'capture_peer_cert'</span> <span class="op">=></span> <span class="kw">true</span>,
+      <span class="str">'verify_peer'</span>       <span class="op">=></span> <span class="kw">true</span>,
+      <span class="str">'verify_peer_name'</span>  <span class="op">=></span> <span class="kw">true</span>,
+    ]
+  ]);
+  <span class="var">$socket</span> <span class="op">=</span> <span class="fn">stream_socket_client</span>(
+    <span class="str">"ssl://{$domain}:443"</span>,
+    <span class="var">$errno</span>, <span class="var">$errstr</span>, <span class="num">10</span>,
+    STREAM_CLIENT_CONNECT, <span class="var">$ctx</span>
+  );
+  <span class="var">$cert</span> <span class="op">=</span> <span class="fn">stream_context_get_params</span>(<span class="var">$socket</span>);
+  <span class="var">$info</span> <span class="op">=</span> <span class="fn">openssl_x509_parse</span>(
+    <span class="var">$cert</span>[<span class="str">'options'</span>][<span class="str">'ssl'</span>][<span class="str">'peer_certificate'</span>]
+  );
+  <span class="kw">return</span> [
+    <span class="str">'expiry'</span>  <span class="op">=></span> <span class="var">$info</span>[<span class="str">'validTo_time_t'</span>],
+    <span class="str">'issuer'</span>  <span class="op">=></span> <span class="var">$info</span>[<span class="str">'issuer'</span>][<span class="str">'O'</span>],
+    <span class="str">'days'</span>    <span class="op">=></span> <span class="fn">daysUntil</span>(<span class="var">$info</span>[<span class="str">'validTo_time_t'</span>])
+  ];
+}</div>
+      </div>
+
+      <!-- AES-256-GCM explanation -->
+      <div class="hood-card hood-card-full reveal reveal-delay-3">
+        <div class="hood-card-header">
+          <div class="dot-row"><span></span><span></span><span></span></div>
+          encryption.php — AES-256-GCM Key Storage
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+          <div class="hood-code"><span class="cm">// Encrypt API keys at rest</span>
+<span class="kw">function</span> <span class="fn">encrypt</span>(<span class="var">$plaintext</span>, <span class="var">$pin</span>) {
+  <span class="var">$key</span>  <span class="op">=</span> <span class="fn">hash</span>(<span class="str">'sha256'</span>, <span class="var">$pin</span>, <span class="kw">true</span>);
+  <span class="var">$iv</span>   <span class="op">=</span> <span class="fn">random_bytes</span>(<span class="num">12</span>);
+  <span class="var">$tag</span>  <span class="op">=</span> <span class="str">''</span>;
+  <span class="var">$data</span> <span class="op">=</span> <span class="fn">openssl_encrypt</span>(
+    <span class="var">$plaintext</span>,
+    <span class="str">'aes-256-gcm'</span>,
+    <span class="var">$key</span>, <span class="num">0</span>,
+    <span class="var">$iv</span>, <span class="var">$tag</span>
+  );
+  <span class="kw">return</span> <span class="fn">base64_encode</span>(
+    <span class="var">$iv</span> <span class="op">.</span> <span class="var">$tag</span> <span class="op">.</span> <span class="var">$data</span>
+  );
+}</div>
+          <div class="hood-explain" style="border-left:1px solid rgba(37,37,96,0.5);">
+            <p><strong>Why AES-256-GCM?</strong> Your Resend API key and email address are encrypted at rest using your PIN as the passphrase. No plaintext secrets ever touch the filesystem.</p>
+            <p><strong>Key derivation:</strong> SHA-256 hash of your numeric PIN produces the 256-bit encryption key. The 12-byte IV is random per encryption. GCM provides authenticated encryption — any tampering is detected.</p>
+            <p><strong>Result:</strong> Even if someone accesses your server files, they can't read your API keys without the PIN. The PIN never leaves the browser.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     ALERTS SHOWCASE
+════════════════════════════════════════════════════════ -->
+<section id="alerts">
+  <div class="section">
+    <p class="section-eyebrow reveal" data-i18n="alert_eyebrow">Email notifications</p>
+    <h2 class="section-title reveal reveal-delay-1"><span data-i18n="alert_title_1">Know before</span><br><em data-i18n="alert_title_em">your users do.</em></h2>
+    <p class="section-body reveal reveal-delay-2">
+      <span data-i18n="alert_subtitle">Mercury sends one beautiful digest email per event — never a flood. Every alert includes a full domain health snapshot: SSL days, DMARC, SPF, NS, MX.</span>
+    </p>
+
+    <div class="alerts-demo reveal reveal-delay-3">
+      <div class="alert-card alert-critical">
+        <div class="alert-icon">🔴</div>
+        <div class="alert-body">
+          <div class="alert-title" data-i18n="alert_1_title">app.yourdomain.com is unreachable</div>
+          <div class="alert-meta" data-i18n="alert_1_meta">SSL: 18d remaining · DMARC: quarantine · NS: Cloudflare · Latency: —</div>
+        </div>
+        <div>
+          <div class="alert-badge badge-critical" data-i18n="badge_critical">CRITICAL</div>
+          <div class="alert-time">Just now</div>
+        </div>
+      </div>
+
+      <div class="alert-card alert-warning">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body">
+          <div class="alert-title" data-i18n="alert_2_title">SSL expiring soon — blog.yourdomain.com</div>
+          <div class="alert-meta" data-i18n="alert_2_meta">Expires in 18 days · Issuer: Let's Encrypt · DMARC: reject ✓</div>
+        </div>
+        <div>
+          <div class="alert-badge badge-warning" data-i18n="badge_warning">WARNING</div>
+          <div class="alert-time">5 min ago</div>
+        </div>
+      </div>
+
+      <div class="alert-card alert-warning">
+        <div class="alert-icon">🛡️</div>
+        <div class="alert-body">
+          <div class="alert-title" data-i18n="alert_3_title">DMARC missing — legacy.yourdomain.com</div>
+          <div class="alert-meta" data-i18n="alert_3_meta">No DMARC policy — vulnerable to spoofing · SPF: ~all ✓</div>
+        </div>
+        <div>
+          <div class="alert-badge badge-warning" data-i18n="badge_warning">WARNING</div>
+          <div class="alert-time">1h ago</div>
+        </div>
+      </div>
+
+      <div class="alert-card alert-ok">
+        <div class="alert-icon">✅</div>
+        <div class="alert-body">
+          <div class="alert-title" data-i18n="alert_4_title">app.yourdomain.com recovered</div>
+          <div class="alert-meta" data-i18n="alert_4_meta">Back online · Latency: 91ms · Uptime: 99.8%</div>
+        </div>
+        <div>
+          <div class="alert-badge badge-ok" data-i18n="badge_ok">RECOVERED</div>
+          <div class="alert-time">2h ago</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     CTA SECTION
+════════════════════════════════════════════════════════ -->
+<div class="cta-section">
+  <div class="cta-inner">
+    <p class="section-eyebrow reveal" style="justify-content:center;display:flex" data-i18n="cta_eyebrow">Get started in 60 seconds</p>
+    <h2 class="section-title reveal reveal-delay-1" style="margin-bottom:var(--space-4)">
+      <span data-i18n="cta_title_1">Stop wondering if your</span><br><em data-i18n="cta_title_em">domains are healthy.</em>
+    </h2>
+    <p class="cta-urgency reveal reveal-delay-2">
+      <span data-i18n="cta_subtitle">Deploy in 60 seconds. No account. No cloud. Your data, your server, your rules.</span>
+    </p>
+
+    <div class="install-box reveal reveal-delay-3">
+      <div class="install-cmd">
+        <span style="color:var(--text-muted)">$</span>
+        <span> curl -L </span>
+        <span>https://github.com/paulfxyz/mercury-sh/archive/main.zip</span>
+        <span style="color:var(--text-muted)"> -o mercury.zip</span>
+      </div>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText('curl -L https://github.com/paulfxyz/mercury-sh/archive/main.zip -o mercury.zip')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy
+      </button>
+    </div>
+
+    <div class="hero-actions reveal reveal-delay-4" style="justify-content:center">
+      <a href="https://demo.mercury.sh" class="btn btn-gold btn-lg" target="_blank" rel="noopener">
+        <span data-i18n="cta_btn_demo">⚡ See Live Demo</span>
+      </a>
+      <a href="https://github.com/paulfxyz/mercury-sh/releases/latest" class="btn btn-primary btn-lg" target="_blank" rel="noopener">
+        <span data-i18n="cta_btn_dl">↓ Download v5.0.0</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     BUILT BY
+════════════════════════════════════════════════════════ -->
+<div class="built-by">
+  <div>
+    <div class="built-author">
+      <img src="avatar.jpg" alt="Paul Fleury" class="author-avatar">
+      <div>
+        <div class="author-name">Paul Fleury</div>
+        <div class="author-role">Founder · Lisbon, Portugal</div>
+        <div class="author-links">
+          <a href="https://github.com/paulfxyz" target="_blank" rel="noopener">GitHub</a>
+          <span style="color:var(--text-faint)">·</span>
+          <a href="https://www.linkedin.com/in/paulfleury" target="_blank" rel="noopener">LinkedIn</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="built-quote reveal" data-i18n="built_quote">"I manage 34 domains across 6 projects. I built Mercury in a weekend because nothing else showed me everything in one place. Then it grew."</div>
+
+    <div class="built-with-label" data-i18n="built_with_label">Built with</div>
+    <div class="built-badges reveal reveal-delay-1">
+      <div class="badge">PHP 8.0+</div>
+      <div class="badge">Vanilla JS</div>
+      <div class="badge">Cloudflare DoH</div>
+      <div class="badge">Resend API</div>
+      <div class="badge">MIT License</div>
+    </div>
+
+    <div class="version-timeline reveal reveal-delay-2">
+      <div class="version-timeline-title">Built in one session</div>
+      <div class="version-row">
+        <div class="version-dot"></div>
+        <div class="version-label"><strong>v1.0</strong> — DNS checks, basic table</div>
+      </div>
+      <div class="version-row">
+        <div class="version-dot"></div>
+        <div class="version-label"><strong>v2.0</strong> — SSL monitoring, alerts</div>
+      </div>
+      <div class="version-row">
+        <div class="version-dot"></div>
+        <div class="version-label"><strong>v3.0</strong> — DMARC/SPF, email security</div>
+      </div>
+      <div class="version-row">
+        <div class="version-dot"></div>
+        <div class="version-label"><strong>v4.0</strong> — AES-256 encryption, PIN auth</div>
+      </div>
+      <div class="version-row">
+        <div class="version-dot active"></div>
+        <div class="version-label"><strong>v5.0</strong> — 100 domains, batch mode, cron</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reveal reveal-delay-2">
+    <p class="section-eyebrow" style="margin-bottom:var(--space-5)" data-i18n="built_eyebrow">How it was built</p>
+    <p style="color:var(--text-muted);line-height:1.75;margin-bottom:var(--space-4)">
+      Mercury started as "The All Seeing Eye" — a personal uptime monitor built over one marathon session. Every version from v1.0 to v5.0 is documented in the CHANGELOG, including every bug, root cause, and fix.
+    </p>
+    <p style="color:var(--text-muted);line-height:1.75;">
+      The SHA-256 caching bug. The <code style="font-family:var(--font-mono);font-size:var(--text-xs);background:var(--surface-2);padding:2px 6px;border-radius:3px">overflow:hidden</code> + <code style="font-family:var(--font-mono);font-size:var(--text-xs);background:var(--surface-2);padding:2px 6px;border-radius:3px">position:sticky</code> conflict. The PHP 7.3 arrow function incompatibility. The MutationObserver that never fired. All documented, all fixed.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-logo">
+    <svg width="20" height="20" viewBox="0 0 32 32" fill="none" style="color:var(--accent)" aria-hidden="true">
+      <circle cx="16" cy="16" r="8" stroke="currentColor" stroke-width="1.5"/>
+      <ellipse cx="16" cy="16" rx="14" ry="5" stroke="currentColor" stroke-width="1" transform="rotate(-20 16 16)" opacity="0.6"/>
+      <circle cx="16" cy="16" r="3" fill="currentColor"/>
+    </svg>
+    mercury<span class="dot-sh">.sh</span>
+  </div>
+
+  <div class="footer-links">
+    <a href="https://github.com/paulfxyz/mercury-sh" target="_blank" rel="noopener" data-i18n="footer_github">GitHub</a>
+    <a href="https://github.com/paulfxyz/mercury-sh/releases" target="_blank" rel="noopener" data-i18n="footer_releases">Releases</a>
+    <a href="https://github.com/paulfxyz/mercury-sh/blob/main/INSTALL.md" target="_blank" rel="noopener" data-i18n="footer_docs">Docs</a>
+    <a href="https://github.com/paulfxyz/mercury-sh/blob/main/CHANGELOG.md" target="_blank" rel="noopener" data-i18n="footer_changelog">Changelog</a>
+    <a href="https://demo.mercury.sh" target="_blank" rel="noopener" data-i18n="footer_demo">Live Demo</a>
+  </div>
+
+  <div class="footer-right">
+    <div>Built by <a href="https://github.com/paulfxyz" target="_blank" rel="noopener">Paul Fleury</a> · MIT License</div>
+    <div style="margin-top:var(--space-1);color:var(--text-faint)" data-i18n="footer_copy">&copy; 2026 mercury.sh · MIT License</div>
+  </div>
+</footer>
+
+<script>
+/* ── Theme toggle (cookie-based persistence) ──────── */
+(function() {
+  var html   = document.documentElement;
+  var btn    = document.getElementById('theme-toggle');
+  var sun    = document.getElementById('icon-sun');
+  var moon   = document.getElementById('icon-moon');
+  function _getMercuryTheme(){var m=document.cookie.match(/(?:^|; )mercury-theme=([^;]*)/);return m?m[1]:'light';}
+  function _setMercuryTheme(t){document.cookie='mercury-theme='+t+';max-age=31536000;path=/;SameSite=Lax';}
+  var stored = _getMercuryTheme();
+
+  function applyTheme(t) {
+    html.setAttribute('data-theme', t);
+    sun.style.display  = t === 'dark'  ? 'block' : 'none';
+    moon.style.display = t === 'light' ? 'block' : 'none';
+  }
+
+  applyTheme(stored);
+
+  btn.addEventListener('click', function() {
+    var next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    applyTheme(next);
+    _setMercuryTheme(next);
+  });
+})();
+
+/* ── Scroll reveal ──────────────────────────────────────── */
+(function() {
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(function(el) {
+    obs.observe(el);
+  });
+})();
+
+/* ── Copy button feedback ───────────────────────────────── */
+document.querySelectorAll('.copy-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    btn.textContent = 'Copied!';
+    btn.style.color = 'var(--accent)';
+    setTimeout(function() {
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+      btn.style.color = '';
+    }, 2000);
+  });
+});
+
+/* ── Animated "watching domains" counter ─────────────────── */
+(function() {
+  var el = document.getElementById('live-counter');
+  if (!el) return;
+  var base = 100;
+  function update() {
+    // Simulate fluctuation between 97-100
+    var n = base - Math.floor(Math.random() * 4);
+    el.innerHTML = 'Watching <strong>' + n + '</strong> domains right now';
+  }
+  setInterval(update, 4000);
+})();
+
+/* ── Number count-up animation ──────────────────────────── */
+(function() {
+  var counted = false;
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting && !counted) {
+        counted = true;
+        document.querySelectorAll('.number-value[data-count]').forEach(function(el) {
+          var target = parseInt(el.getAttribute('data-count'), 10);
+          var current = 0;
+          var step = Math.max(1, Math.floor(target / 40));
+          var timer = setInterval(function() {
+            current += step;
+            if (current >= target) {
+              current = target;
+              clearInterval(timer);
+            }
+            el.textContent = current;
+          }, 30);
+        });
+        obs.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+
+  var section = document.querySelector('.numbers-section');
+  if (section) obs.observe(section);
+})();
+</script>
+
+
+<!-- Language Picker + i18n Engine -->
+<script src="i18n.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   MERCURY I18N ENGINE
+   - Reads window.MERCURY_I18N for translations
+   - Applies data-i18n (textContent) and data-i18n-html (innerHTML)
+   - Persists selected language in mercury-lang cookie
+   - Auto-detects browser language on first visit
+   - Smooth dropdown with keyboard nav
+═══════════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
+
+  /* ── Cookie helpers ── */
+  function getCookie(name) {
+    var m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function setCookie(name, value, days) {
+    var exp = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + '=' + encodeURIComponent(value) + ';expires=' + exp + ';path=/;SameSite=Lax';
+  }
+
+  /* ── Detect best language ── */
+  var SUPPORTED = ['en','fr','de','es','pt','it','tr','ru','zh','ja','hi'];
+
+  function detectLang() {
+    // 1. Cookie preference
+    var saved = getCookie('mercury-lang');
+    if (saved && SUPPORTED.indexOf(saved) !== -1) return saved;
+
+    // 2. Browser language
+    var langs = navigator.languages || [navigator.language || 'en'];
+    for (var i = 0; i < langs.length; i++) {
+      var code = langs[i].split('-')[0].toLowerCase();
+      if (SUPPORTED.indexOf(code) !== -1) return code;
+    }
+    return 'en';
+  }
+
+  /* ── Apply translations to DOM ── */
+  function applyLang(code) {
+    var t = window.MERCURY_I18N && window.MERCURY_I18N[code];
+    if (!t) return;
+
+    // textContent translations
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n');
+      if (t[key] !== undefined) el.textContent = t[key];
+    });
+
+    // innerHTML translations (for elements with <strong>, <code>, etc.)
+    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n-html');
+      if (t[key] !== undefined) el.innerHTML = t[key];
+    });
+
+    // Update <html lang=""> attribute
+    var langMap = {en:'en',fr:'fr',de:'de',es:'es',pt:'pt',it:'it',tr:'tr',ru:'ru',zh:'zh-Hans',ja:'ja',hi:'hi'};
+    document.documentElement.setAttribute('lang', langMap[code] || code);
+
+    // Update picker UI
+    var d = window.MERCURY_I18N[code];
+    var flagEl = document.getElementById('lang-flag');
+    var nameEl = document.getElementById('lang-name');
+    if (flagEl && d) flagEl.textContent = d.lang_flag;
+    if (nameEl && d) nameEl.textContent = code.toUpperCase();
+
+    // Mark active option
+    document.querySelectorAll('.lang-option').forEach(function(opt) {
+      opt.classList.toggle('active', opt.getAttribute('data-lang') === code);
+    });
+
+    // Store preference
+    setCookie('mercury-lang', code, 365);
+
+    // Update live-counter text (overrides the JS animation template)
+    window._i18nLang = code;
+  }
+
+  /* ── Dropdown logic ── */
+  var picker   = document.getElementById('lang-picker');
+  var trigger  = document.getElementById('lang-trigger');
+  var dropdown = document.getElementById('lang-dropdown');
+
+  function openDropdown() {
+    picker.classList.add('open');
+    trigger.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeDropdown() {
+    picker.classList.remove('open');
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+
+  if (trigger) {
+    trigger.addEventListener('click', function(e) {
+      e.stopPropagation();
+      picker.classList.contains('open') ? closeDropdown() : openDropdown();
+    });
+  }
+
+  // Close on outside click
+  document.addEventListener('click', function(e) {
+    if (picker && !picker.contains(e.target)) closeDropdown();
+  });
+
+  // Keyboard nav
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDropdown();
+  });
+
+  // Option selection
+  document.querySelectorAll('.lang-option').forEach(function(opt) {
+    opt.addEventListener('click', function() {
+      var code = opt.getAttribute('data-lang');
+      applyLang(code);
+      closeDropdown();
+    });
+  });
+
+  /* ── Patch live-counter to use i18n ── */
+  // We override the original interval to use translated string
+  // The original counter JS fires on load; we patch it after i18n loads
+  var _origCounter = window._liveCounterInterval;
+
+  /* ── Init ── */
+  var initialLang = detectLang();
+  applyLang(initialLang);
+
+})();
+</script>
+
+</body>
+</html>

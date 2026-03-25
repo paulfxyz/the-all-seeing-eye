@@ -4,7 +4,7 @@
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES2020-yellow?style=flat-square&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777BB4?style=flat-square&logo=php&logoColor=white)](https://www.php.net/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](./LICENSE)
-[![Version](https://img.shields.io/badge/Version-5.0.0-blue?style=flat-square)](https://github.com/paulfxyz/mercury-sh/releases)
+[![Version](https://img.shields.io/badge/Version-5.1.0-blue?style=flat-square)](https://github.com/paulfxyz/mercury-sh/releases)
 [![Self-Hosted](https://img.shields.io/badge/Self--Hosted-Yes-purple?style=flat-square)](#setup--installation)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-success?style=flat-square)](#tech-stack-decisions)
 
@@ -125,6 +125,13 @@ Mercury monitors any list of domains and reports on five signals simultaneously:
 - Sort by rank, SSL expiry, latency, status, or A→Z
 - Filter to alerts-only or online-only
 - Hover tooltips showing full DNS record values (NS hostnames, full MX records, raw DMARC/SPF strings)
+
+**Landing Page (v5.1.0+)**
+- 11-language i18n system — English · Français · Deutsch · Español · Português · Italiano · Türkçe · Русский · 中文 · 日本語 · हिंदी
+- Language picker in nav: flag emoji + language code, smooth animated dropdown, ARIA-accessible
+- Browser language auto-detection on first visit; preference persisted in `mercury-lang` cookie
+- Zero-dependency i18n engine — no library, pure vanilla JS with `data-i18n` attribute convention
+- `data-i18n-html` for elements containing inline HTML (subtitles with `<strong>`, steps with `<code>`)
 
 **Automation**
 - Auto-refresh every 3 minutes with live countdown
