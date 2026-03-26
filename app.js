@@ -1965,7 +1965,12 @@ function checkWebhookMode() {
     renderTable();
     return checkAll();
   }).then(function() {
-    console.log('[Mercury] Webhook complete. ' + DOMAINS.length + ' domains checked.');
+    /* Persist uptime data to uptime.json after every webhook-triggered check.
+       This is the key mechanism for accumulating long-term uptime history
+       across all invocation sources — browser, manual refresh, and cron/webhook. */
+    uptimeSave();
+    saveDomainsStats();
+    console.log('[Mercury] Webhook complete. ' + DOMAINS.length + ' domains checked. Uptime persisted.');
   });
   return true;
 }

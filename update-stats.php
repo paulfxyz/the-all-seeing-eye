@@ -53,7 +53,8 @@ define('MAX_DOMAINS',   200);   // safety cap — prevents runaway cron
 define('NOTIFY_PHP',    __DIR__ . '/notify.php');   // email notification endpoint
 define('CONFIG_FILE',   __DIR__ . '/ase_config.json'); // settings (for notification check)
 define('NOTIFY_SENT',   __DIR__ . '/cron_notify_sent.json'); // deduplication tracker
-define('VERSION',       '3.3.0');
+define('VERSION',       '5.4.0');
+define('UPTIME_FILE',   __DIR__ . '/uptime.json');  // persistent uptime history
 
 // ── Bootstrap ─────────────────────────────────────────────────
 $startTime = microtime(true);
@@ -418,6 +419,80 @@ if (file_put_contents(DOMAINS_JSON, json_encode($jsonOutput, JSON_PRETTY_PRINT))
     log_line("✓  domains.json written");
 } else {
     log_line("⚠  domains.json not written (optional — not required for operation)");
+}
+
+
+// ── Step 5.5: Persist uptime data to uptime.json ──────────────────
+
+/**
+ * Merge this cron run's UP/DOWN results into uptime.json.
+ * This is the server-side equivalent of uptimeSave() in app.js.
+ *
+ * uptime.json schema: { "domain": { checks, ups, firstSeen, lastDown } }
+ *
+ * Each cron run adds 1 check per domain. This accumulates across every
+ * browser session, manual refresh, and cron/webhook call — building a
+ * long-term uptime record that survives browser tab closes.
+ */
+
+$uptimeData = [];
+if (file_exists(UPTIME_FILE)) {
+    $raw = file_get_contents(UPTIME_FILE);
+    if ($raw) {
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded)) $uptimeData = $decoded;
+    }
+}
+
+$now = time() * 1000; // Unix ms
+
+foreach ($results as $r) {
+    $domain = strtolower(trim($r['domain']));
+    $isUp   = ($r['status'] === 'UP');
+
+    if (!isset($uptimeData[$domain])) {
+        $uptimeData[$domain] = [
+            'checks'    => 0,
+            'ups'       => 0,
+            'firstSeen' => $now,
+            'lastDown'  => null,
+        ];
+    }
+
+    $uptimeData[$domain]['checks']++;
+    if ($isUp) {
+        $uptimeData[$domain]['ups']++;
+    } else {
+        $uptimeData[$domain]['lastDown'] = $now;
+    }
+}
+
+// Trim to 500 domains max (least-checked first)
+if (count($uptimeData) > 500) {
+    uasort($uptimeData, function($a, $b) {
+        return ($a['checks'] ?? 0) - ($b['checks'] ?? 0);
+    });
+    $uptimeData = array_slice($uptimeData, -500, 500, true);
+}
+
+// Atomic write: temp file + rename (safe against partial writes)
+$uptimeJson = json_encode($uptimeData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+$tmpFile    = UPTIME_FILE . '.tmp.' . getmypid();
+$fp = fopen($tmpFile, 'w');
+if ($fp) {
+    flock($fp, LOCK_EX);
+    fwrite($fp, $uptimeJson);
+    flock($fp, LOCK_UN);
+    fclose($fp);
+    if (rename($tmpFile, UPTIME_FILE)) {
+        $uptimeCount = count($uptimeData);
+        log_line("✓  uptime.json updated ($uptimeCount domains tracked)");
+    } else {
+        @unlink($tmpFile);
+        log_line("⚠  uptime.json rename failed — check directory permissions");
+    }
+} else {
+    log_line("⚠  uptime.json write failed — could not open temp file");
 }
 
 

@@ -11,6 +11,70 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## ⚡ [5.4.0] — 2026-03-26
+
+### Persistent Uptime Records + Webhook Automation
+
+---
+
+#### What changed
+
+Uptime data is now persistently recorded to `uptime.json` from **every source** — browser sessions, manual refreshes, cron runs, and webhook calls all accumulate into the same server-side file. This means:
+
+- Closing the browser tab no longer loses uptime history
+- Multiple devices and visitors all contribute to the same record
+- A free cron service (cron-job.org, UptimeRobot, GitHub Actions) calling `webhook.do` once per hour turns Mercury into a fully automated, always-recording uptime platform with zero infrastructure cost
+
+#### Architecture: how data flows into `uptime.json`
+
+```
+Browser (manual Refresh)  ─┐
+Browser (3-min auto)       ├─→ uptimeSave() → POST uptime-write.php → uptime.json
+webhook.do (cron trigger)  ┤                  (delta merge, atomic write)
+update-stats.php (PHP cron)┘
+```
+
+All four paths now write to `uptime.json`. Previously, `update-stats.php` (the PHP cron) and `webhook.do` did **not** call `uptimeSave()` — only browser sessions were persisted.
+
+#### `update-stats.php` changes
+
+- Added **Step 5.5** — after writing `domains.stats` and `domains.json`, the PHP cron now merges all UP/DOWN results into `uptime.json`
+- Same atomic write strategy as `uptime-write.php` (temp file + `rename()`, `flock()`)
+- Max 500 domains cap (trims least-checked first)
+- Outputs `✓ uptime.json updated (N domains tracked)` in cron log
+- Version constant bumped: `3.3.0` → `5.4.0`
+
+#### `app.js` (webhook mode) changes
+
+- `checkWebhookMode()` now calls `uptimeSave()` **and** `saveDomainsStats()` after `checkAll()` completes
+- Previously these were missing from the webhook path — webhook runs were not persisting uptime
+
+#### Landing page
+
+- New **“Automated Monitoring” section** added (between Alerts showcase and CTA)
+- 4-step visual flow: Schedule webhook → Mercury checks everything → Results saved to `uptime.json` → Email alerts
+- cron-job.org callout with free tier badge and example webhook URL
+- Section anchor: `#automation`
+
+#### cron-job.org (demo.mercury.sh)
+
+- Job `7418641`: `https://demo.mercury.sh/webhook.do` — every hour (`0 * * * *`) — active
+- Job `7418643`: `https://demo.mercury.sh/update-stats.php` — every 6 hours (`0 */6 * * *`) — active
+
+### ✨ Added
+
+- `update-stats.php` Step 5.5: merge cron check results into `uptime.json`
+- `app.js`: `uptimeSave()` + `saveDomainsStats()` called after webhook-mode `checkAll()`
+- Landing page: Automated Monitoring section with 4-step flow and cron-job.org callout
+- cron-job.org: 2 jobs created for `demo.mercury.sh` (hourly webhook + 6h PHP cron)
+
+### 🔧 Fixed
+
+- Webhook-triggered checks now correctly persist uptime data (previously lost on tab close)
+- PHP cron (`update-stats.php`) now contributes to the shared `uptime.json` history
+
+---
+
 ## 🐛 [5.3.0] — 2026-03-26
 
 ### Bugfix — Tooltips missing for ranks 51–100
