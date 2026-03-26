@@ -37,7 +37,7 @@
  *   - uptime.json protected from direct access via .htaccess
  *
  * @version 3.1.0
- * @author  Paul Fleury / Perplexity Computer
+ * @author  Paul Fleury
  */
 
 header('Content-Type: application/json');

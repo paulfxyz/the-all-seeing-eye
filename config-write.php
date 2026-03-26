@@ -44,7 +44,7 @@
  *   });
  *
  * @version 2.1.0
- * @author  Paul Fleury / Perplexity Computer
+ * @author  Paul Fleury
  */
 
 header('Content-Type: application/json');

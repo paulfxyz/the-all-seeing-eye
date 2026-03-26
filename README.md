@@ -40,7 +40,7 @@
    - [AES-256-GCM Key Encryption](#aes-256-gcm-key-encryption)
    - [Uptime Persistence Evolution](#uptime-persistence-evolution)
 4. [Lessons Learned](#lessons-learned)
-5. [Building with Perplexity Computer](#building-with-perplexity-computer)
+5. [Building with AI](#building-with-ai)
 6. [Tech Stack Decisions](#tech-stack-decisions)
 7. [File-by-File Reference](#file-by-file-reference)
 8. [Setup & Installation](#setup--installation)
@@ -84,7 +84,7 @@ The reasons:
 - **The tool is useful.** There is a real gap in the market for a zero-dependency, self-hosted infrastructure monitor that covers DNS + SSL + DMARC in a single view.
 - **The bugs are instructive.** Every significant bug uncovered during development — the SHA-256 caching issue, the CSS stacking context trap, the PHP heredoc interpolation limitation — is a lesson that other developers will hit. Documenting them publicly is worth more than keeping them private.
 - **Self-hosted tools deserve to be open.** If you're running this on your own server, you should be able to read every line of code. There are no analytics, no tracking, no phoning home.
-- **Perplexity Computer helped build it.** The collaboration model — a human providing product judgment and domain knowledge, an AI providing implementation speed and debugging breadth — produced something neither could have done as well alone. Making the result open-source felt like the right way to complete that story.
+- **AI assistance helped build it.** The collaboration model — a human providing product judgment and domain knowledge, an AI providing implementation speed and debugging breadth — produced something neither could have done as well alone. Making the result open-source felt like the right way to complete that story.
 
 ### The rename: The All Seeing Eye → Mercury
 
@@ -596,7 +596,7 @@ The prime generation costs approximately 0.2ms. For a PIN verification that happ
 
 #### The symptom
 
-The PIN numpad buttons had been wired with `addEventListener('click', ...)` from a `DOMContentLoaded` callback — the standard, idiomatic approach for attaching JavaScript event listeners. This worked perfectly in direct browser tabs, but completely failed when the page was loaded inside a sandboxed iframe (such as a preview pane in Perplexity Computer).
+The PIN numpad buttons had been wired with `addEventListener('click', ...)` from a `DOMContentLoaded` callback — the standard, idiomatic approach for attaching JavaScript event listeners. This worked perfectly in direct browser tabs, but completely failed when the page was loaded inside a sandboxed iframe (such as a preview pane in AI assistance).
 
 The buttons were visible, the CSS was applied correctly, but clicking a PIN button did nothing.
 
@@ -1492,13 +1492,13 @@ A single "Loading…" indicator that disappears when all 100 domains are checked
 
 ---
 
-## Building with Perplexity Computer
+## Building with AI
 
-Mercury was built in collaboration with [Perplexity Computer](https://www.perplexity.ai/computer) — an AI assistant capable of writing, debugging, and reasoning about code.
+Mercury was built in collaboration with AI assistance — an AI assistant capable of writing, debugging, and reasoning about code.
 
 ### How the collaboration worked
 
-The development model was straightforward: a human (the author) provided product judgment, design decisions, and domain knowledge; Perplexity Computer provided implementation speed, debugging breadth, and documentation thoroughness.
+The development model was straightforward: a human (the author) provided product judgment, design decisions, and domain knowledge; AI provided implementation speed, debugging breadth, and documentation thoroughness.
 
 The session structure was conversational and iterative. A typical exchange:
 
@@ -2343,9 +2343,9 @@ Built by **Paul Fleury** — [paulf.xyz](https://paulf.xyz) / [@paulfxyz on GitH
 - Demo: [demo.mercury.sh](https://demo.mercury.sh)
 - GitHub: [github.com/paulfxyz/mercury-sh](https://github.com/paulfxyz/mercury-sh)
 
-### Built with Perplexity Computer
+### Built with AI
 
-Mercury was designed and built in collaboration with [Perplexity Computer](https://www.perplexity.ai/computer). The AI contributed architecture reasoning, implementation code, bug diagnosis, documentation, and the comprehensive CSS/PHP debugging that produced most of the lessons in this README.
+Mercury was designed and built in collaboration with AI assistance. The AI contributed architecture reasoning, implementation code, bug diagnosis, documentation, and the comprehensive CSS/PHP debugging that produced most of the lessons in this README.
 
 The collaboration model — human judgment + AI technical depth — produced something neither could have built as well alone. Mercury is a concrete example of what that partnership looks like at a product level.
 

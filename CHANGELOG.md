@@ -148,7 +148,7 @@ The dropdown uses CSS transforms (`translateY` + `scale(0.97)`) for the open/clo
   - All visible text wrapped in `data-i18n` spans for translation
   - CTA urgency text updated to include full subtitle from i18n key
   - Footer year updated: 2025 → 2026, copyright clarified "MIT License"
-  - No Perplexity Computer references anywhere on the public-facing page
+  - No AI tool branding anywhere on the public-facing page
 - Nav: language picker sits after GitHub button, uses Mercury design system tokens
 
 ### 🔧 Fixed
@@ -743,7 +743,7 @@ On touch devices (`navigator.maxTouchPoints > 0`), the custom numpad is hidden a
 - On wrong PIN: input clears + red border flash + dots flash error
 - On correct PIN: input is dismissed, normal flow continues
 
-Why keep the numpad at all? It still works in sandboxed iframes (Perplexity Computer preview) where `focus()` may not trigger. The numpad handles non-touch contexts; the input handles touch contexts. Both call the same `pinBuffer` + `pinCheck()` logic.
+Why keep the numpad at all? It still works in sandboxed iframes (sandboxed iframe preview) where `focus()` may not trigger. The numpad handles non-touch contexts; the input handles touch contexts. Both call the same `pinBuffer` + `pinCheck()` logic.
 
 ### ✨ Added
 

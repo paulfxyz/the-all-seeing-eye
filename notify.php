@@ -28,7 +28,7 @@
  *   - All inputs sanitised before rendering in HTML
  *
  * @version 3.3.0
- * @author  Paul Fleury / Perplexity Computer
+ * @author  Paul Fleury
  */
 
 header('Content-Type: application/json');

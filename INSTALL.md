@@ -618,4 +618,4 @@ Checks run in batches of 5 with 300ms pauses — well within Cloudflare's limits
 
 MIT — free to use, modify, and share.
 
-[Created with Perplexity Computer](https://www.perplexity.ai/computer)
+Made with ❤️ + AI
