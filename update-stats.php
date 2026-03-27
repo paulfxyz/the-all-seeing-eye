@@ -56,10 +56,42 @@ define('NOTIFY_SENT',   __DIR__ . '/cron_notify_sent.json'); // deduplication tr
 define('VERSION',       '5.4.0');
 define('UPTIME_FILE',   __DIR__ . '/uptime.json');  // persistent uptime history
 
+// ── Cron token + IP bypass ────────────────────────────────────────
+//
+// SiteGround's SGcaptcha blocks known cron service IPs before PHP runs.
+// Solution: add ?token=SECRET to the cron URL — the unique token prevents
+// the WAF from matching the request against its bot IP reputation list.
+//
+// Set CRON_TOKEN to a secret, then use this URL in cron-job.org:
+//   https://yourdomain.com/update-stats.php?token=bRHONd8LxEg_v7yb0QQceJgFS5o6NdYn
+//
+// Leave empty ('') to allow unauthenticated access.
+define('CRON_TOKEN', 'bRHONd8LxEg_v7yb0QQceJgFS5o6NdYn');
+
+// Known cron-job.org executor IPs (source: api.cron-job.org/executor-nodes.json)
+define('CRON_IPS', ['116.203.129.16','116.203.134.67','23.88.105.37','128.140.8.200','91.99.23.109']);
+
+
 // ── Bootstrap ─────────────────────────────────────────────────
 $startTime = microtime(true);
 $timestamp = gmdate('Y-m-d\TH:i:s\Z');
 $isCLI     = (php_sapi_name() === 'cli');
+
+// ── Token / IP auth check ─────────────────────────────────────────
+// Allow: CLI runs (cPanel cron), whitelisted IPs, or valid token in URL.
+if (!$isCLI) {
+    $remoteIP    = $_SERVER['REMOTE_ADDR'] ?? '';
+    $queryToken  = $_GET['token'] ?? '';
+    $validToken  = CRON_TOKEN !== '' && hash_equals(CRON_TOKEN, $queryToken);
+    $validIP     = in_array($remoteIP, CRON_IPS, true);
+
+    if (!$validToken && !$validIP) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Forbidden — provide ?token= or run from whitelisted IP']);
+        exit;
+    }
+}
+
 
 // Output helpers
 function log_line(string $msg): void {

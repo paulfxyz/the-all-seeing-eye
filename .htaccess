@@ -1,6 +1,28 @@
 # All-Seeing-Eye — Apache configuration
 # Place this file in the same directory as index.html
 
+# ── Whitelist cron-job.org executor IPs (bypass SiteGround bot protection) ────
+# These are the official cron-job.org executor node IPs.
+# Source: https://api.cron-job.org/executor-nodes.json
+# Without this, SiteGround's SGcaptcha intercepts requests before PHP runs.
+SetEnvIf Remote_Addr "116\.203\.129\.16"  cron_allowed
+SetEnvIf Remote_Addr "116\.203\.134\.67"  cron_allowed
+SetEnvIf Remote_Addr "23\.88\.105\.37"    cron_allowed
+SetEnvIf Remote_Addr "128\.140\.8\.200"   cron_allowed
+SetEnvIf Remote_Addr "91\.99\.23\.109"    cron_allowed
+
+<Files "update-stats.php">
+    Order Allow,Deny
+    Allow from env=cron_allowed
+    Allow from 127.0.0.1
+    # Also allow direct browser access for manual runs (remove if you want strict)
+    Allow from all
+</Files>
+
+<Files "webhook.do">
+    Allow from all
+</Files>
+
 # ── Prevent browser caching of the app files ─────────────────────
 # Forces the browser to always fetch fresh HTML/JS/CSS — prevents
 # stale cached versions after an update.
