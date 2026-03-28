@@ -233,33 +233,31 @@ nav {
 
 .nav-logo-wordmark {
   display: inline-flex;
-  align-items: baseline;
-  gap: 2px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
   line-height: 1;
   position: relative;
-  top: -3px;
+  top: -2px;
 }
 
 .nav-logo-wordmark .logo-ase {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.45rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   color: var(--text);
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .nav-logo-wordmark .logo-tld {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: 0.62rem;
+  font-weight: 600;
   font-style: italic;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   color: var(--accent);
-  line-height: 1;
-  /* shift down relative to baseline */
-  position: relative;
-  top: 5px;
+  line-height: 1.2;
 }
 
 /* Nav links */
@@ -1675,23 +1673,27 @@ footer {
   gap: var(--space-2);
 }
 
+.footer-logo span.logo-ase,
+.footer-logo span.logo-tld {
+  display: block;
+}
+
 .footer-logo .logo-ase {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: var(--text-base);
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   color: var(--text-muted);
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .footer-logo .logo-tld {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 0.55rem;
+  font-weight: 600;
   font-style: italic;
   color: var(--accent);
-  position: relative;
-  top: 3px;
+  line-height: 1.2;
 }
 
 .footer-links {
@@ -1941,7 +1943,7 @@ footer {
         <line x1="21" y1="19" x2="22.5" y2="19" stroke="currentColor" stroke-width="1" opacity="0.6"/>
         <line x1="11" y1="19" x2="9.5" y2="19" stroke="currentColor" stroke-width="1" opacity="0.6"/>
       </svg>
-      <span class="nav-logo-wordmark"><span class="logo-ase">ase</span><span class="logo-tld">.so</span></span>
+      <span class="nav-logo-wordmark"><span class="logo-ase">All-Seeing-Eye</span><span class="logo-tld">ase.so</span></span>
     </a>
 
     <ul class="nav-links">
@@ -2838,7 +2840,7 @@ footer {
       <ellipse cx="16" cy="18" rx="5.5" ry="3.5" stroke="currentColor" stroke-width="1.2" fill="none"/>
       <circle cx="16" cy="18" r="2" fill="currentColor"/>
     </svg>
-    <span class="logo-ase">ase</span><span class="logo-tld">.so</span>
+    <span class="logo-ase">All-Seeing-Eye</span><span class="logo-tld">ase.so</span>
   </div>
 
   <div class="footer-links">
